@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { ChakraProvider, Box, VStack, HStack, Grid, GridItem, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
 
 const initialBoard = [
   ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
@@ -21,6 +19,7 @@ const ChessGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     if (!playerTurn && !gameOver) {
@@ -44,6 +43,7 @@ const ChessGame = () => {
     // Check for game over condition (e.g., king captured)
     if (newBoard[endRow][endCol].toLowerCase() === 'k') {
       setGameOver(true);
+      onOpen(); // Open the game over modal
     }
   };
 
@@ -88,6 +88,7 @@ const ChessGame = () => {
       addChatMessage("AI", aiResponse);
     } else {
       setGameOver(true);
+      onOpen(); // Open the game over modal
     }
   };
 
@@ -119,6 +120,7 @@ const ChessGame = () => {
     setPlayerTurn(true);
     setGameOver(false);
     setChatMessages([]);
+    onClose(); // Close the game over modal
   };
 
   const addChatMessage = (sender, message) => {
@@ -135,75 +137,77 @@ const ChessGame = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="flex items-start">
-        <div className="flex flex-col items-center">
-          <h1 className="text-3xl font-bold mb-4">Chess Game Demo</h1>
-          <div className="bg-white p-4 rounded shadow-lg">
-            {board.map((row, rowIndex) => (
-              <div key={rowIndex} className="flex">
-                {row.map((piece, colIndex) => (
-                  <div
-                    key={colIndex}
-                    className={`w-12 h-12 flex items-center justify-center text-2xl cursor-pointer ${
-                      (rowIndex + colIndex) % 2 === 0 ? 'bg-gray-200' : 'bg-gray-400'
-                    } ${selectedPiece && selectedPiece[0] === rowIndex && selectedPiece[1] === colIndex ? 'border-2 border-blue-500' : ''}`}
+    <ChakraProvider>
+      <Box p={4}>
+        <HStack spacing={8} alignItems="flex-start">
+          <VStack>
+            <Text fontSize="2xl" fontWeight="bold" mb={4}>Chess Game Demo</Text>
+            <Grid templateColumns="repeat(8, 1fr)" gap={1}>
+              {board.map((row, rowIndex) => 
+                row.map((piece, colIndex) => (
+                  <GridItem
+                    key={`${rowIndex}-${colIndex}`}
+                    w="50px"
+                    h="50px"
+                    bg={(rowIndex + colIndex) % 2 === 0 ? "gray.200" : "gray.400"}
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    fontSize="2xl"
                     onClick={() => handleClick(rowIndex, colIndex)}
+                    border={selectedPiece && selectedPiece[0] === rowIndex && selectedPiece[1] === colIndex ? "2px solid blue" : "none"}
+                    cursor="pointer"
                   >
                     {piece}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-lg">
-            {gameOver ? "Game Over!" : (playerTurn ? "Your turn" : "AI's turn")}
-          </p>
-          <button
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            onClick={resetGame}
-          >
-            Reset Game
-          </button>
-        </div>
-        
-        <div className="ml-8 w-64 bg-white p-4 rounded shadow-lg">
-          <h2 className="text-xl font-bold mb-4">Chat</h2>
-          <div className="h-80 overflow-y-auto mb-4">
-            {chatMessages.map((msg, index) => (
-              <div key={index} className="mb-2">
-                <span className="font-bold">{msg.sender}: </span>
-                <span>{msg.message}</span>
-              </div>
-            ))}
-          </div>
-          <div className="flex">
-            <Input
-              type="text"
-              value={currentMessage}
-              onChange={(e) => setCurrentMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-grow mr-2"
-            />
-            <Button onClick={handleSendMessage}>Send</Button>
-          </div>
-        </div>
-      </div>
+                  </GridItem>
+                ))
+              )}
+            </Grid>
+            <Text mt={4} fontSize="lg">
+              {gameOver ? "Game Over!" : (playerTurn ? "Your turn" : "AI's turn")}
+            </Text>
+            <Button colorScheme="blue" onClick={resetGame} mt={4}>
+              Reset Game
+            </Button>
+          </VStack>
+          
+          <VStack width="300px" bg="gray.100" p={4} borderRadius="md" alignItems="stretch">
+            <Text fontSize="xl" fontWeight="bold" mb={4}>Chat</Text>
+            <Box height="300px" overflowY="auto" mb={4} bg="white" p={2} borderRadius="md">
+              {chatMessages.map((msg, index) => (
+                <Text key={index} mb={2}>
+                  <strong>{msg.sender}: </strong>{msg.message}
+                </Text>
+              ))}
+            </Box>
+            <HStack>
+              <Input
+                value={currentMessage}
+                onChange={(e) => setCurrentMessage(e.target.value)}
+                placeholder="Type a message..."
+              />
+              <Button onClick={handleSendMessage}>Send</Button>
+            </HStack>
+          </VStack>
+        </HStack>
+      </Box>
 
-      <AlertDialog open={gameOver}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Game Over!</AlertDialogTitle>
-            <AlertDialogDescription>
-              {playerTurn ? "AI wins!" : "You win!"}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={resetGame}>Play Again</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Game Over!</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {playerTurn ? "AI wins!" : "You win!"}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={resetGame}>
+              Play Again
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </ChakraProvider>
   );
 };
 
