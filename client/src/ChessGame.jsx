@@ -143,6 +143,11 @@ const ChessGame = () => {
               <Input
                 value={currentMessage}
                 onChange={(e) => setCurrentMessage(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendMessage();
+                  }
+                }}
                 placeholder="Type a command (e.g., @PawnE2, move forward)"
               />
               <Button onClick={handleSendMessage}>Send</Button>
