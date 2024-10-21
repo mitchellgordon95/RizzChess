@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChakraProvider, Box, VStack, HStack, Grid, GridItem, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
+import './ChessGame.css';
 
 const initialBoard = [
   ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
