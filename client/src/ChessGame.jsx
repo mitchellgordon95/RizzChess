@@ -5,6 +5,7 @@ import './ChessGame.css';
 
 const ChessGame = () => {
   const [game, setGame] = useState(new Chess());
+  const [fen, setFen] = useState(game.fen);
   const [playerTurn, setPlayerTurn] = useState(true);
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
@@ -20,7 +21,9 @@ const ChessGame = () => {
   const makeMove = useCallback((from, to) => {
     const move = game.move({ from, to, promotion: 'q' });
     if (move) {
-      setGame(new Chess(game.fen()));
+      const newGame = new Chess(game.fen);
+      setGame(newGame);
+      setFen(newGame.fen);
       setPlayerTurn(prevTurn => !prevTurn);
 
       if (game.game_over()) {
@@ -44,7 +47,7 @@ const ChessGame = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, board: game.fen() }),
+        body: JSON.stringify({ prompt, board: fen }),
       });
 
       if (!response.ok) {
@@ -72,7 +75,9 @@ const ChessGame = () => {
   };
 
   const resetGame = () => {
-    setGame(new Chess());
+    const newGame = new Chess();
+    setGame(newGame);
+    setFen(newGame.fen);
     setPlayerTurn(true);
     setGameOver(false);
     setChatMessages([]);
@@ -101,7 +106,7 @@ const ChessGame = () => {
           <VStack>
             <Text fontSize="2xl" fontWeight="bold" mb={4}>Chess Game Demo</Text>
             <Box width="400px" height="400px">
-              <Chess position={game.fen()} />
+              <Chess position={fen} />
             </Box>
             <Text mt={4} fontSize="lg">
               {gameOver ? "Game Over!" : (playerTurn ? "Your turn" : "AI's turn")}
