@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
-import Chess from 'react-chess'
+import { Chessboard } from "react-chessboard";
+import { Chess } from 'chess.js';
 import './ChessGame.css';
 
 const ChessGame = () => {
   const [game, setGame] = useState(new Chess());
-  const [fen, setFen] = useState(game.fen);
   const [playerTurn, setPlayerTurn] = useState(true);
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
@@ -18,20 +18,32 @@ const ChessGame = () => {
     }
   }, [playerTurn, gameOver]);
 
-  const makeMove = useCallback((from, to) => {
-    const move = game.move({ from, to, promotion: 'q' });
-    if (move) {
-      const newGame = new Chess(game.fen);
-      setGame(newGame);
-      setFen(newGame.fen);
+  const makeMove = useCallback((move) => {
+    const gameCopy = new Chess(game.fen());
+    const result = gameCopy.move(move);
+    if (result) {
+      setGame(gameCopy);
       setPlayerTurn(prevTurn => !prevTurn);
 
-      if (game.game_over()) {
+      if (gameCopy.game_over()) {
         setGameOver(true);
         onOpen();
       }
     }
+    return result;
   }, [game, onOpen]);
+
+  function onDrop(sourceSquare, targetSquare) {
+    const move = makeMove({
+      from: sourceSquare,
+      to: targetSquare,
+      promotion: 'q', // always promote to a queen for example simplicity
+    });
+
+    // illegal move
+    if (move === null) return false;
+    return true;
+  }
 
   const makeAIMove = async () => {
     // AI move logic remains the same
@@ -47,7 +59,7 @@ const ChessGame = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, board: fen }),
+        body: JSON.stringify({ prompt, board: game.fen() }),
       });
 
       if (!response.ok) {
@@ -62,7 +74,7 @@ const ChessGame = () => {
         const { startRow, startCol, endRow, endCol } = data.move;
         const from = String.fromCharCode(97 + startCol) + (8 - startRow);
         const to = String.fromCharCode(97 + endCol) + (8 - endRow);
-        makeMove(from, to);
+        makeMove({ from, to });
       } else {
         console.log('No valid move in the response');
       }
@@ -77,7 +89,6 @@ const ChessGame = () => {
   const resetGame = () => {
     const newGame = new Chess();
     setGame(newGame);
-    setFen(newGame.fen);
     setPlayerTurn(true);
     setGameOver(false);
     setChatMessages([]);
@@ -106,7 +117,11 @@ const ChessGame = () => {
           <VStack>
             <Text fontSize="2xl" fontWeight="bold" mb={4}>Chess Game Demo</Text>
             <Box width="400px" height="400px">
-              <Chess position={fen} />
+              <Chessboard 
+                position={game.fen()} 
+                onPieceDrop={onDrop}
+                boardOrientation={playerTurn ? "white" : "black"}
+              />
             </Box>
             <Text mt={4} fontSize="lg">
               {gameOver ? "Game Over!" : (playerTurn ? "Your turn" : "AI's turn")}
