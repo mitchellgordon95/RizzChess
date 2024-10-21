@@ -12,14 +12,17 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 app.post('/api/chat', async (req, res) => {
   try {
     const { prompt, board } = req.body;
+    console.log('Received request:', { prompt, board });
     
     // Extract piece and command from the prompt
     const match = prompt.match(/@(\w+)(.+)/);
     if (!match) {
+      console.log('Invalid command format');
       return res.json({ message: "I couldn't understand the command. Please use the format '@PiecePosition, command'.", move: null });
     }
 
     const [, piece, command] = match;
+    console.log('Extracted piece and command:', { piece, command });
 
     // Construct a prompt for Claude
     const claudePrompt = `You are playing as the ${piece} piece on a chess board. The current board state is:
@@ -33,6 +36,8 @@ Respond in this format: "MOVE:startRow,startCol,endRow,endCol" followed by a bri
 If the move is not valid or possible, respond with "INVALID" followed by an explanation.
 
 Remember, you are roleplaying as the chess piece. Keep your explanation in character.`;
+
+    console.log('Sending prompt to Claude:', claudePrompt);
 
     const response = await axios.post('https://api.anthropic.com/v1/messages', {
       model: "claude-3-5-sonnet-20240620",
@@ -49,26 +54,32 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
     });
 
     const aiResponse = response.data.content[0].text;
+    console.log('Received response from Claude:', aiResponse);
+
     const moveMatch = aiResponse.match(/MOVE:(\d+),(\d+),(\d+),(\d+)/);
     
+    let result;
     if (moveMatch) {
       const [, startRow, startCol, endRow, endCol] = moveMatch.map(Number);
       const explanation = aiResponse.split('\n').slice(1).join('\n');
-      return res.json({ 
+      result = { 
         message: explanation, 
         move: { startRow, startCol, endRow, endCol }
-      });
+      };
     } else if (aiResponse.includes("INVALID")) {
-      return res.json({ 
+      result = { 
         message: aiResponse.replace("INVALID", "").trim(), 
         move: null 
-      });
+      };
     } else {
-      return res.json({ 
+      result = { 
         message: "I couldn't generate a valid move. Please try another command.", 
         move: null 
-      });
+      };
     }
+
+    console.log('Sending response to client:', result);
+    return res.json(result);
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'An error occurred while processing your request.' });

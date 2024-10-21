@@ -51,6 +51,7 @@ const ChessGame = () => {
 
   const generateAIResponse = async (prompt) => {
     try {
+      console.log('Sending request to server:', { prompt, board });
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -64,6 +65,7 @@ const ChessGame = () => {
       }
 
       const data = await response.json();
+      console.log('Received response from server:', data);
       return data;
     } catch (error) {
       console.error("Error calling backend API:", error);
