@@ -66,6 +66,13 @@ const ChessGame = () => {
 
       const data = await response.json();
       console.log('Received response from server:', data);
+      
+      // If there's a valid move, make it
+      if (data.move) {
+        const { startRow, startCol, endRow, endCol } = data.move;
+        makeMove(startRow, startCol, endRow, endCol);
+      }
+      
       return data;
     } catch (error) {
       console.error("Error calling backend API:", error);
@@ -89,13 +96,8 @@ const ChessGame = () => {
     if (currentMessage.trim() !== '') {
       addChatMessage("You", currentMessage);
       
-      const { message, move } = await generateAIResponse(currentMessage);
+      const { message } = await generateAIResponse(currentMessage);
       addChatMessage("AI", message);
-
-      if (move) {
-        const { startRow, startCol, endRow, endCol } = move;
-        makeMove(startRow, startCol, endRow, endCol);
-      }
 
       setCurrentMessage('');
     }
