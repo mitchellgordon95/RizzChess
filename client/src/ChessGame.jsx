@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChakraProvider, Box, VStack, HStack, Grid, GridItem, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
-import { produce } from 'immer';
 import './ChessGame.css';
 
-const initialBoard = [
-  'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',
-  'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',
-  ...Array(32).fill(null),
-  'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',
-  'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'
-];
+const initialBoard = 'rnbqkbnrpppppppp................................PPPPPPPPRNBQKBNR';
 
 const ChessGame = () => {
   const [board, setBoard] = useState(initialBoard);
@@ -30,12 +23,15 @@ const ChessGame = () => {
   }, [board]);
 
   const makeMove = useCallback((startRow, startCol, endRow, endCol) => {
-    setBoard(produce(draft => {
+    setBoard(prevBoard => {
+      const boardArray = prevBoard.split('');
       const startIndex = startRow * 8 + startCol;
       const endIndex = endRow * 8 + endCol;
-      draft[endIndex] = draft[startIndex];
-      draft[startIndex] = null;
-    }));
+      const movingPiece = boardArray[startIndex];
+      boardArray[endIndex] = movingPiece;
+      boardArray[startIndex] = '.';
+      return boardArray.join('');
+    });
     setPlayerTurn(prevTurn => !prevTurn);
 
     // Check for game over condition (e.g., king captured)
@@ -61,7 +57,7 @@ const ChessGame = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, board: board }),
+        body: JSON.stringify({ prompt, board }),
       });
 
       if (!response.ok) {
@@ -118,7 +114,7 @@ const ChessGame = () => {
           <VStack>
             <Text fontSize="2xl" fontWeight="bold" mb={4}>Chess Game Demo</Text>
             <Grid templateColumns="repeat(8, 1fr)" gap={1}>
-              {board.map((piece, index) => (
+              {board.split('').map((piece, index) => (
                 <GridItem
                   key={index}
                   w="50px"
@@ -129,7 +125,7 @@ const ChessGame = () => {
                   alignItems="center"
                   fontSize="2xl"
                 >
-                  {piece}
+                  {piece !== '.' ? piece : ''}
                 </GridItem>
               ))}
             </Grid>

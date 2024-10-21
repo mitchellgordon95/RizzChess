@@ -88,7 +88,7 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
 
 function boardToString(board) {
   return Array(8).fill().map((_, i) => 
-    board.slice(i * 8, (i + 1) * 8).map(piece => piece || '.').join(' ')
+    board.slice(i * 8, (i + 1) * 8).split('').join(' ')
   ).join('\n');
 }
 
