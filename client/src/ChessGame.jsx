@@ -29,13 +29,14 @@ const ChessGame = () => {
 
   const makeMove = (startRow, startCol, endRow, endCol) => {
     const newBoard = board.map(row => [...row]);
-    newBoard[endRow][endCol] = newBoard[startRow][startCol];
+    const movingPiece = newBoard[startRow][startCol];
+    newBoard[endRow][endCol] = movingPiece;
     newBoard[startRow][startCol] = null;
     setBoard(newBoard);
     setPlayerTurn(!playerTurn);
 
     // Check for game over condition (e.g., king captured)
-    if (newBoard[endRow][endCol].toLowerCase() === 'k') {
+    if (movingPiece && movingPiece.toLowerCase() === 'k') {
       setGameOver(true);
       onOpen(); // Open the game over modal
     }
