@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ChakraProvider, Box, VStack, HStack, Grid, GridItem, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
+import { produce } from 'immer';
 import './ChessGame.css';
 
 const initialBoard = [
-  ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-  ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-  Array(8).fill(null),
-  Array(8).fill(null),
-  Array(8).fill(null),
-  Array(8).fill(null),
-  ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-  ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
+  'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',
+  'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',
+  ...Array(32).fill(null),
+  'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',
+  'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'
 ];
 
 const ChessGame = () => {
@@ -31,23 +29,22 @@ const ChessGame = () => {
     console.log('Board state changed:', board);
   }, [board]);
 
-  const makeMove = (startRow, startCol, endRow, endCol) => {
-    setBoard(prevBoard => {
-      const newBoard = prevBoard.map(row => [...row]);
-      const movingPiece = newBoard[startRow][startCol];
-      newBoard[endRow][endCol] = movingPiece;
-      newBoard[startRow][startCol] = null;
-      console.log('Board state updated:', newBoard);
-      return newBoard;
-    });
+  const makeMove = useCallback((startRow, startCol, endRow, endCol) => {
+    setBoard(produce(draft => {
+      const startIndex = startRow * 8 + startCol;
+      const endIndex = endRow * 8 + endCol;
+      draft[endIndex] = draft[startIndex];
+      draft[startIndex] = null;
+    }));
     setPlayerTurn(prevTurn => !prevTurn);
 
     // Check for game over condition (e.g., king captured)
-    if (board[startRow][startCol] && board[startRow][startCol].toLowerCase() === 'k') {
+    const startIndex = startRow * 8 + startCol;
+    if (board[startIndex] && board[startIndex].toLowerCase() === 'k') {
       setGameOver(true);
       onOpen(); // Open the game over modal
     }
-  };
+  }, [board, onOpen]);
 
   const makeAIMove = async () => {
     // AI move logic remains the same
@@ -121,22 +118,20 @@ const ChessGame = () => {
           <VStack>
             <Text fontSize="2xl" fontWeight="bold" mb={4}>Chess Game Demo</Text>
             <Grid templateColumns="repeat(8, 1fr)" gap={1}>
-              {board.map((row, rowIndex) => 
-                row.map((piece, colIndex) => (
-                  <GridItem
-                    key={`${rowIndex}-${colIndex}`}
-                    w="50px"
-                    h="50px"
-                    bg={(rowIndex + colIndex) % 2 === 0 ? "gray.200" : "gray.400"}
-                    display="flex"
-                    justifyContent="center"
-                    alignItems="center"
-                    fontSize="2xl"
-                  >
-                    {piece}
-                  </GridItem>
-                ))
-              )}
+              {board.map((piece, index) => (
+                <GridItem
+                  key={index}
+                  w="50px"
+                  h="50px"
+                  bg={(Math.floor(index / 8) + index % 8) % 2 === 0 ? "gray.200" : "gray.400"}
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                  fontSize="2xl"
+                >
+                  {piece}
+                </GridItem>
+              ))}
             </Grid>
             <Text mt={4} fontSize="lg">
               {gameOver ? "Game Over!" : (playerTurn ? "Your turn" : "AI's turn")}
