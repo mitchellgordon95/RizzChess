@@ -27,17 +27,23 @@ const ChessGame = () => {
     }
   }, [playerTurn, gameOver]);
 
+  useEffect(() => {
+    console.log('Board state changed:', board);
+  }, [board]);
+
   const makeMove = (startRow, startCol, endRow, endCol) => {
-    const newBoard = board.map(row => [...row]);
-    const movingPiece = newBoard[startRow][startCol];
-    newBoard[endRow][endCol] = movingPiece;
-    newBoard[startRow][startCol] = null;
-    console.log('Board state updated:', newBoard);
-    setBoard(newBoard);
-    setPlayerTurn(!playerTurn);
+    setBoard(prevBoard => {
+      const newBoard = prevBoard.map(row => [...row]);
+      const movingPiece = newBoard[startRow][startCol];
+      newBoard[endRow][endCol] = movingPiece;
+      newBoard[startRow][startCol] = null;
+      console.log('Board state updated:', newBoard);
+      return newBoard;
+    });
+    setPlayerTurn(prevTurn => !prevTurn);
 
     // Check for game over condition (e.g., king captured)
-    if (movingPiece && movingPiece.toLowerCase() === 'k') {
+    if (board[startRow][startCol] && board[startRow][startCol].toLowerCase() === 'k') {
       setGameOver(true);
       onOpen(); // Open the game over modal
     }
@@ -73,6 +79,7 @@ const ChessGame = () => {
         console.log('Valid move received:', data.move);
         const { startRow, startCol, endRow, endCol } = data.move;
         makeMove(startRow, startCol, endRow, endCol);
+        console.log('Board state after makeMove:', board);
       } else {
         console.log('No valid move in the response');
       }
