@@ -24,19 +24,19 @@ const ChessGame = () => {
 
   const makeMove = useCallback((startRow, startCol, endRow, endCol) => {
     setBoard(prevBoard => {
-      const boardArray = prevBoard.split('');
       const startIndex = startRow * 8 + startCol;
       const endIndex = endRow * 8 + endCol;
-      const movingPiece = boardArray[startIndex];
-      boardArray[endIndex] = movingPiece;
-      boardArray[startIndex] = '.';
-      return boardArray.join('');
+      const movingPiece = prevBoard[startIndex];
+      return prevBoard.substring(0, startIndex) + '.' + 
+             prevBoard.substring(startIndex + 1, endIndex) + 
+             movingPiece + 
+             prevBoard.substring(endIndex + 1);
     });
     setPlayerTurn(prevTurn => !prevTurn);
 
     // Check for game over condition (e.g., king captured)
-    const startIndex = startRow * 8 + startCol;
-    if (board[startIndex] && board[startIndex].toLowerCase() === 'k') {
+    const endIndex = endRow * 8 + endCol;
+    if (board[endIndex] && board[endIndex].toLowerCase() === 'k') {
       setGameOver(true);
       onOpen(); // Open the game over modal
     }
@@ -114,7 +114,7 @@ const ChessGame = () => {
           <VStack>
             <Text fontSize="2xl" fontWeight="bold" mb={4}>Chess Game Demo</Text>
             <Grid templateColumns="repeat(8, 1fr)" gap={1}>
-              {board.split('').map((piece, index) => (
+              {Array.from(board).map((piece, index) => (
                 <GridItem
                   key={index}
                   w="50px"
