@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChakraProvider, Box, VStack, HStack, Grid, GridItem, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
+import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
+import Chess from 'react-chess'
 import './ChessGame.css';
 
-const initialBoard = 'rnbqkbnrpppppppp................................PPPPPPPPRNBQKBNR';
-
 const ChessGame = () => {
-  const [board, setBoard] = useState(initialBoard);
+  const [game, setGame] = useState(new Chess());
   const [playerTurn, setPlayerTurn] = useState(true);
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
@@ -18,46 +17,34 @@ const ChessGame = () => {
     }
   }, [playerTurn, gameOver]);
 
-  useEffect(() => {
-    console.log('Board state changed:', board);
-  }, [board]);
+  const makeMove = useCallback((from, to) => {
+    const move = game.move({ from, to, promotion: 'q' });
+    if (move) {
+      setGame(new Chess(game.fen()));
+      setPlayerTurn(prevTurn => !prevTurn);
 
-  const makeMove = useCallback((startRow, startCol, endRow, endCol) => {
-    setBoard(prevBoard => {
-      const startIndex = startRow * 8 + startCol;
-      const endIndex = endRow * 8 + endCol;
-      const movingPiece = prevBoard[startIndex];
-      return prevBoard.substring(0, startIndex) + '.' + 
-             prevBoard.substring(startIndex + 1, endIndex) + 
-             movingPiece + 
-             prevBoard.substring(endIndex + 1);
-    });
-    setPlayerTurn(prevTurn => !prevTurn);
-
-    // Check for game over condition (e.g., king captured)
-    const endIndex = endRow * 8 + endCol;
-    if (board[endIndex] && board[endIndex].toLowerCase() === 'k') {
-      setGameOver(true);
-      onOpen(); // Open the game over modal
+      if (game.game_over()) {
+        setGameOver(true);
+        onOpen();
+      }
     }
-  }, [board, onOpen]);
+  }, [game, onOpen]);
 
   const makeAIMove = async () => {
     // AI move logic remains the same
-    // ...
-
+    // You'll need to adapt this to work with the new game state
     setPlayerTurn(true);
   };
 
   const generateAIResponse = async (prompt) => {
     try {
-      console.log('Sending request to server:', { prompt, board });
+      console.log('Sending request to server:', { prompt, board: game.fen() });
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, board }),
+        body: JSON.stringify({ prompt, board: game.fen() }),
       });
 
       if (!response.ok) {
@@ -67,12 +54,12 @@ const ChessGame = () => {
       const data = await response.json();
       console.log('Received response from server:', data);
       
-      // If there's a valid move, make it
       if (data.move) {
         console.log('Valid move received:', data.move);
         const { startRow, startCol, endRow, endCol } = data.move;
-        makeMove(startRow, startCol, endRow, endCol);
-        console.log('Board state after makeMove:', board);
+        const from = String.fromCharCode(97 + startCol) + (8 - startRow);
+        const to = String.fromCharCode(97 + endCol) + (8 - endRow);
+        makeMove(from, to);
       } else {
         console.log('No valid move in the response');
       }
@@ -85,11 +72,11 @@ const ChessGame = () => {
   };
 
   const resetGame = () => {
-    setBoard(initialBoard);
+    setGame(new Chess());
     setPlayerTurn(true);
     setGameOver(false);
     setChatMessages([]);
-    onClose(); // Close the game over modal
+    onClose();
   };
 
   const addChatMessage = (sender, message) => {
@@ -113,22 +100,9 @@ const ChessGame = () => {
         <HStack spacing={8} alignItems="flex-start">
           <VStack>
             <Text fontSize="2xl" fontWeight="bold" mb={4}>Chess Game Demo</Text>
-            <Grid templateColumns="repeat(8, 1fr)" gap={1}>
-              {Array.from(board).map((piece, index) => (
-                <GridItem
-                  key={index}
-                  w="50px"
-                  h="50px"
-                  bg={(Math.floor(index / 8) + index % 8) % 2 === 0 ? "gray.200" : "gray.400"}
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                  fontSize="2xl"
-                >
-                  {piece !== '.' ? piece : ''}
-                </GridItem>
-              ))}
-            </Grid>
+            <Box width="400px" height="400px">
+              <Chess position={game.fen()} />
+            </Box>
             <Text mt={4} fontSize="lg">
               {gameOver ? "Game Over!" : (playerTurn ? "Your turn" : "AI's turn")}
             </Text>

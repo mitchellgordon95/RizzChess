@@ -86,9 +86,12 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
   }
 });
 
-function boardToString(board) {
-  return Array(8).fill().map((_, i) => 
-    board.slice(i * 8, (i + 1) * 8).split('').join(' ')
+function boardToString(fen) {
+  const board = fen.split(' ')[0];
+  return board.split('/').map(row => 
+    row.split('').map(char => 
+      isNaN(char) ? char : '.'.repeat(parseInt(char))
+    ).join(' ')
   ).join('\n');
 }
 
