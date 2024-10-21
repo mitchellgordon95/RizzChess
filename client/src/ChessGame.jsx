@@ -32,6 +32,7 @@ const ChessGame = () => {
     const movingPiece = newBoard[startRow][startCol];
     newBoard[endRow][endCol] = movingPiece;
     newBoard[startRow][startCol] = null;
+    console.log('Board state updated:', newBoard);
     setBoard(newBoard);
     setPlayerTurn(!playerTurn);
 
@@ -69,8 +70,11 @@ const ChessGame = () => {
       
       // If there's a valid move, make it
       if (data.move) {
+        console.log('Valid move received:', data.move);
         const { startRow, startCol, endRow, endCol } = data.move;
         makeMove(startRow, startCol, endRow, endCol);
+      } else {
+        console.log('No valid move in the response');
       }
       
       return data;
