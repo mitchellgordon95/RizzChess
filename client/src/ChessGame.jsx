@@ -119,7 +119,7 @@ const ChessGame = () => {
               <Chessboard 
                 position={game.fen()} 
                 onPieceDrop={onDrop}
-                boardOrientation={playerTurn ? "white" : "black"}
+                boardOrientation="white"
               />
             </Box>
             <Text mt={4} fontSize="lg">
