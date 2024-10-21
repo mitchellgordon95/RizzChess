@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -10,11 +11,34 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.post('/api/chat', async (req, res) => {
   try {
+    const { prompt, board } = req.body;
+    
+    // Extract piece and command from the prompt
+    const match = prompt.match(/@(\w+)(.+)/);
+    if (!match) {
+      return res.json({ message: "I couldn't understand the command. Please use the format '@PiecePosition, command'.", move: null });
+    }
+
+    const [, piece, command] = match;
+
+    // Construct a prompt for Claude
+    const claudePrompt = `You are playing as the ${piece} piece on a chess board. The current board state is:
+
+${boardToString(board)}
+
+The player has given you this command: "${command}"
+
+Based on this command and your position on the board, suggest a valid chess move. 
+Respond in this format: "MOVE:startRow,startCol,endRow,endCol" followed by a brief explanation of the move.
+If the move is not valid or possible, respond with "INVALID" followed by an explanation.
+
+Remember, you are roleplaying as the chess piece. Keep your explanation in character.`;
+
     const response = await axios.post('https://api.anthropic.com/v1/messages', {
       model: "claude-3-5-sonnet-20240620",
       max_tokens: 1024,
       messages: [
-        { role: "user", content: req.body.prompt }
+        { role: "user", content: claudePrompt }
       ]
     }, {
       headers: {
@@ -24,12 +48,36 @@ app.post('/api/chat', async (req, res) => {
       }
     });
 
-    res.json({ message: response.data.content[0].text });
+    const aiResponse = response.data.content[0].text;
+    const moveMatch = aiResponse.match(/MOVE:(\d+),(\d+),(\d+),(\d+)/);
+    
+    if (moveMatch) {
+      const [, startRow, startCol, endRow, endCol] = moveMatch.map(Number);
+      const explanation = aiResponse.split('\n').slice(1).join('\n');
+      return res.json({ 
+        message: explanation, 
+        move: { startRow, startCol, endRow, endCol }
+      });
+    } else if (aiResponse.includes("INVALID")) {
+      return res.json({ 
+        message: aiResponse.replace("INVALID", "").trim(), 
+        move: null 
+      });
+    } else {
+      return res.json({ 
+        message: "I couldn't generate a valid move. Please try another command.", 
+        move: null 
+      });
+    }
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ error: 'An error occurred while processing your request.' });
   }
 });
+
+function boardToString(board) {
+  return board.map(row => row.map(piece => piece || '.').join(' ')).join('\n');
+}
 
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
