@@ -71,9 +71,8 @@ const ChessGame = () => {
       
       if (data.move) {
         console.log('Valid move received:', data.move);
-        const { startRow, startCol, endRow, endCol } = data.move;
-        const from = String.fromCharCode(97 + startCol) + (8 - startRow);
-        const to = String.fromCharCode(97 + endCol) + (8 - endRow);
+        const from = data.move.slice(0, 2);
+        const to = data.move.slice(2, 4);
         makeMove({ from, to });
       } else {
         console.log('No valid move in the response');

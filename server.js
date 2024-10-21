@@ -32,7 +32,7 @@ ${boardToString(board)}
 The player has given you this command: "${command}"
 
 Based on this command and your position on the board, suggest a valid chess move. 
-Respond in this format: "MOVE:startRow,startCol,endRow,endCol" followed by a brief explanation of the move.
+Respond in this format: "MOVE:e2e4" (replace e2e4 with your actual move) followed by a brief explanation of the move.
 If the move is not valid or possible, respond with "INVALID" followed by an explanation.
 
 Remember, you are roleplaying as the chess piece. Keep your explanation in character.`;
@@ -56,15 +56,15 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
     const aiResponse = response.data.content[0].text;
     console.log('Received response from Claude:', aiResponse);
 
-    const moveMatch = aiResponse.match(/MOVE:(\d+),(\d+),(\d+),(\d+)/);
+    const moveMatch = aiResponse.match(/MOVE:([a-h][1-8][a-h][1-8])/);
     
     let result;
     if (moveMatch) {
-      const [, startRow, startCol, endRow, endCol] = moveMatch.map(Number);
+      const [, move] = moveMatch;
       const explanation = aiResponse.split('\n').slice(1).join('\n');
       result = { 
         message: explanation, 
-        move: { startRow, startCol, endRow, endCol }
+        move: move
       };
     } else if (aiResponse.includes("INVALID")) {
       result = { 
