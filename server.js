@@ -50,26 +50,26 @@ Remember to roleplay as the ${pieceType}. Keep your explanation in character.`;
     const aiResponse = response.data.content[0].text;
     console.log('Received response from Claude:', aiResponse);
 
-    const moveMatch = aiResponse.match(/MOVE:([a-h][1-8][a-h][1-8])/i);
+    const moveMatch = aiResponse.match(/MOVE:(\S+)/i);
     
     let result;
     if (moveMatch) {
-      const [, move] = moveMatch;
+      const [, algebraicMove] = moveMatch;
       const explanation = aiResponse.split('\n').slice(1).join('\n').trim();
       
-      // Validate the move using chess.js
-      const chessMove = chess.move({
-        from: move.slice(0, 2).toLowerCase(),
-        to: move.slice(2, 4).toLowerCase(),
-        promotion: 'q' // Always promote to queen for simplicity
-      });
-      
-      if (chessMove) {
-        result = { 
-          message: explanation, 
-          move: move.toLowerCase()
-        };
-      } else {
+      // Validate and convert the move using chess.js
+      try {
+        const chessMove = chess.move(algebraicMove);
+        if (chessMove) {
+          const move = chessMove.from + chessMove.to;
+          result = { 
+            message: explanation, 
+            move: move.toLowerCase()
+          };
+        } else {
+          throw new Error("Invalid move");
+        }
+      } catch (error) {
         result = { 
           message: "The suggested move is not valid. Let's try a different approach.", 
           move: null 
