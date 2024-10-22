@@ -26,7 +26,7 @@ Here are the valid moves for the ${pieceType} at ${pieceSquare}:
 ${chess.moves({ square: pieceSquare }).join(', ')}
 
 Based on this command and the valid moves, suggest a chess move for the ${pieceType} at ${pieceSquare}. 
-Respond in this format: "MOVE:e2e4" (replace e2e4 with your actual move) followed by a brief explanation of the move.
+Respond in this format: "MOVE:[FEN]" (replace [FEN] with the FEN notation of the board after your move) followed by a brief explanation of the move.
 If no valid move is possible based on the command, respond with "INVALID" followed by an explanation.
 
 Remember to roleplay as the ${pieceType}. Keep your explanation in character.`;
@@ -54,22 +54,27 @@ Remember to roleplay as the ${pieceType}. Keep your explanation in character.`;
     
     let result;
     if (moveMatch) {
-      const [, algebraicMove] = moveMatch;
+      const [, fenAfterMove] = moveMatch;
       const explanation = aiResponse.split('\n').slice(1).join('\n').trim();
       
-      // Validate and convert the move using chess.js
+      // Validate the FEN and extract the move
       try {
-        const chessMove = chess.move(algebraicMove);
-        if (chessMove) {
-          const move = chessMove.from + chessMove.to;
+        const currentPosition = new Chess(board);
+        const newPosition = new Chess(fenAfterMove);
+        
+        // Find the difference between the two positions
+        const move = findMoveBetweenPositions(currentPosition, newPosition);
+        
+        if (move) {
           result = { 
             message: explanation, 
             move: move.toLowerCase()
           };
         } else {
-          throw new Error("Invalid move");
+          throw new Error("Couldn't determine the move from the FEN");
         }
       } catch (error) {
+        console.error('Error processing move:', error);
         result = { 
           message: "The suggested move is not valid. Let's try a different approach.", 
           move: null 
@@ -107,6 +112,29 @@ function boardToString(fen) {
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname+'/client/build/index.html'));
 });
+
+function findMoveBetweenPositions(oldPosition, newPosition) {
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      const square = String.fromCharCode(97 + j) + (8 - i);
+      const oldPiece = oldPosition.get(square);
+      const newPiece = newPosition.get(square);
+      
+      if (oldPiece && !newPiece) {
+        // A piece was moved from this square
+        for (let x = 0; x < 8; x++) {
+          for (let y = 0; y < 8; y++) {
+            const targetSquare = String.fromCharCode(97 + x) + (8 - y);
+            if (oldPosition.get(targetSquare) !== newPosition.get(targetSquare)) {
+              return square + targetSquare;
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
