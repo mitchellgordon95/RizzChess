@@ -68,8 +68,8 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
       
       // Validate the move using chess.js
       const chessMove = chess.move({
-        from: move.slice(0, 2),
-        to: move.slice(2, 4),
+        from: move.slice(0, 2).toLowerCase(),
+        to: move.slice(2, 4).toLowerCase(),
         promotion: 'q' // Always promote to queen for simplicity
       });
       
@@ -102,6 +102,8 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
     return res.json(result);
   } catch (error) {
     console.error('Error:', error);
+    console.error('Current FEN:', chess.fen());
+    console.error('Attempted move:', move);
     res.status(500).json({ error: 'An error occurred while processing your request.' });
   }
 });
