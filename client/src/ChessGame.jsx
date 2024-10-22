@@ -13,7 +13,6 @@ const isKingCaptured = (fen) => {
 
 const ChessGame = () => {
   const [game, setGame] = useState(new Chess());
-  const [playerTurn, setPlayerTurn] = useState(true);
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
@@ -26,18 +25,11 @@ const ChessGame = () => {
     }
   }, [chatMessages]);
 
-  useEffect(() => {
-    if (!playerTurn && !gameOver) {
-      setTimeout(makeAIMove, 500);
-    }
-  }, [playerTurn, gameOver]);
-
   const makeMove = useCallback((move) => {
     const gameCopy = new Chess(game.fen());
     const result = gameCopy.move(move);
     if (result) {
       setGame(gameCopy);
-      setPlayerTurn(prevTurn => !prevTurn);
 
       if (isKingCaptured(gameCopy.fen())) {
         setGameOver(true);
@@ -47,25 +39,19 @@ const ChessGame = () => {
     return result;
   }, [game, onOpen]);
 
-  function onDrop(sourceSquare, targetSquare) {
-    const move = makeMove({
-      from: sourceSquare,
-      to: targetSquare,
-      promotion: 'q', // always promote to a queen for example simplicity
-    });
-
-    // illegal move
-    if (move === null) return false;
-    return true;
-  }
-
-  const makeAIMove = async () => {
-    // AI move logic remains the same
-    // You'll need to adapt this to work with the new game state
-    setPlayerTurn(true);
+  const resetGame = () => {
+    const newGame = new Chess();
+    setGame(newGame);
+    setGameOver(false);
+    setChatMessages([]);
+    onClose();
   };
 
-  const generateAIResponse = async (prompt) => {
+  const addChatMessage = (sender, message) => {
+    setChatMessages(prevMessages => [...prevMessages, { sender, message }]);
+  };
+
+  const generatePieceResponse = async (prompt) => {
     try {
       console.log('Sending request to server:', { prompt, board: game.fen() });
       const response = await fetch('/api/chat', {
@@ -99,28 +85,25 @@ const ChessGame = () => {
     }
   };
 
-  const resetGame = () => {
-    const newGame = new Chess();
-    setGame(newGame);
-    setPlayerTurn(true);
-    setGameOver(false);
-    setChatMessages([]);
-    onClose();
-  };
-
-  const addChatMessage = (sender, message) => {
-    setChatMessages(prevMessages => [...prevMessages, { sender, message }]);
-  };
-
   const handleSendMessage = async () => {
     if (currentMessage.trim() !== '') {
       const messageToSend = currentMessage;
       setCurrentMessage(''); // Clear the input immediately
       
-      addChatMessage("You", messageToSend);
+      addChatMessage("Player", messageToSend);
       
-      const { message } = await generateAIResponse(messageToSend);
-      addChatMessage("AI", message);
+      const { message, move } = await generatePieceResponse(messageToSend);
+      addChatMessage(move ? `Piece at ${move.slice(0, 2)}` : "AI", message);
+
+      // Generate AI's next move
+      if (!gameOver) {
+        setTimeout(async () => {
+          const aiPrompt = "Make a strategic move";
+          addChatMessage("AI", aiPrompt);
+          const { message, move } = await generatePieceResponse(aiPrompt);
+          addChatMessage(move ? `Piece at ${move.slice(0, 2)}` : "AI", message);
+        }, 1000);
+      }
     }
   };
 
@@ -133,12 +116,11 @@ const ChessGame = () => {
             <Box width="400px" height="400px">
               <Chessboard 
                 position={game.fen()} 
-                onPieceDrop={onDrop}
                 boardOrientation="white"
               />
             </Box>
             <Text mt={4} fontSize="lg">
-              {gameOver ? "Game Over!" : (playerTurn ? "Your turn" : "AI's turn")}
+              {gameOver ? "Game Over!" : "Chat with the pieces"}
             </Text>
             <Button colorScheme="blue" onClick={resetGame} mt={4}>
               Reset Game
@@ -163,7 +145,7 @@ const ChessGame = () => {
                     handleSendMessage();
                   }
                 }}
-                placeholder="Type a command (e.g., @PawnE2, move forward)"
+                placeholder="Chat with the pieces..."
               />
               <Button onClick={handleSendMessage}>Send</Button>
             </HStack>
@@ -177,7 +159,7 @@ const ChessGame = () => {
           <ModalHeader>Game Over!</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {playerTurn ? "AI wins!" : "You win!"}
+            The game has ended. A king has been captured!
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={resetGame}>

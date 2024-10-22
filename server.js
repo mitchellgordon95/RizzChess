@@ -17,28 +17,18 @@ app.post('/api/chat', async (req, res) => {
     
     const chess = new Chess(board);
     
-    // Extract piece and command from the prompt
-    const match = prompt.match(/@(\w+)(.+)/);
-    if (!match) {
-      console.log('Invalid command format');
-      return res.json({ message: "I couldn't understand the command. Please use the format '@PiecePosition, command'.", move: null });
-    }
-
-    const [, piece, command] = match;
-    console.log('Extracted piece and command:', { piece, command });
-
     // Construct a prompt for Claude
-    const claudePrompt = `You are playing as the ${piece} piece on a chess board. Here are your valid moves based on your current position:
+    const claudePrompt = `You are an AI assistant helping to play a chess game. The current board state is:
 
-${getValidMoves(piece, board)}
+${boardToString(board)}
 
-The player has given you this command: "${command}"
+A player or AI has given this command: "${prompt}"
 
-Based on this command and your available moves, suggest a valid chess move. 
+Based on this command and the current board state, suggest a valid chess move for any piece. 
 Respond in this format: "MOVE:e2e4" (replace e2e4 with your actual move) followed by a brief explanation of the move.
-If the move is not valid or possible, respond with "INVALID" followed by an explanation.
+If no valid move is possible based on the command, respond with "INVALID" followed by an explanation.
 
-Remember, you are roleplaying as the chess piece. Keep your explanation in character.`;
+Remember to roleplay as the piece you're moving. Keep your explanation in character.`;
 
     console.log('Sending prompt to Claude:', claudePrompt);
 
@@ -80,7 +70,7 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
         };
       } else {
         result = { 
-          message: "The suggested move is not valid. Please try another command.", 
+          message: "The suggested move is not valid. Let's try a different approach.", 
           move: null 
         };
       }
@@ -91,7 +81,7 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
       };
     } else {
       result = { 
-        message: "I couldn't generate a valid move. Please try another command.", 
+        message: "I couldn't generate a valid move based on that command. Let's try something else.", 
         move: null 
       };
     }
@@ -102,23 +92,9 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
     return res.json(result);
   } catch (error) {
     console.error('Error:', error);
-    console.error('Current FEN:', chess.fen());
-    console.error('Attempted move:', move);
     res.status(500).json({ error: 'An error occurred while processing your request.' });
   }
 });
-
-function getValidMoves(piece, fen) {
-  const chess = new Chess(fen);
-  const [file, rank] = piece.slice(-2).toLowerCase().split('');
-  const square = file + rank;
-  
-  const moves = chess.moves({ square: square, verbose: true });
-  return moves.map(move => {
-    const targetPiece = chess.get(move.to);
-    return `${move.to}${targetPiece ? ` (${targetPiece.type} present)` : ''}`;
-  }).join('\n');
-}
 
 function boardToString(fen) {
   const chess = new Chess(fen);
