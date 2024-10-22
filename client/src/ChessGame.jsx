@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from 'chess.js';
@@ -18,6 +18,13 @@ const ChessGame = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
 
   useEffect(() => {
     if (!playerTurn && !gameOver) {
@@ -140,7 +147,7 @@ const ChessGame = () => {
           
           <VStack width="300px" bg="gray.100" p={4} borderRadius="md" alignItems="stretch">
             <Text fontSize="xl" fontWeight="bold" mb={4}>Chat</Text>
-            <Box height="300px" overflowY="auto" mb={4} bg="white" p={2} borderRadius="md">
+            <Box ref={chatContainerRef} height="300px" overflowY="auto" mb={4} bg="white" p={2} borderRadius="md">
               {chatMessages.map((msg, index) => (
                 <Text key={index} mb={2}>
                   <strong>{msg.sender}: </strong>{msg.message}
