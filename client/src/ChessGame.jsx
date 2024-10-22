@@ -106,17 +106,29 @@ const ChessGame = () => {
       
       addChatMessage("Player", messageToSend);
       
-      const { message, move } = await generatePieceResponse(messageToSend);
-      addChatMessage(move ? `Piece at ${move.slice(0, 2)}` : "AI", message);
+      // Parse the message to get the piece type and square
+      const match = messageToSend.match(/@([a-h][1-8])/);
+      let pieceType, pieceSquare;
+      
+      if (match) {
+        pieceSquare = match[1];
+        const piece = game.get(pieceSquare);
+        if (piece) {
+          pieceType = piece.type.toUpperCase();
+        }
+      }
+      
+      const { message, move } = await generatePieceResponse(messageToSend, pieceType, pieceSquare);
+      addChatMessage(move ? `${pieceType || 'Piece'} at ${move.slice(0, 2)}` : `${pieceType || 'Piece'} at ${pieceSquare || 'unknown'}`, message);
 
       // Generate AI's next move
       if (!gameOver) {
         setTimeout(async () => {
           const aiPiece = getRandomAIPiece(game);
           const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
-          addChatMessage("AI", aiPrompt);
+          addChatMessage("Game", aiPrompt);
           const { message, move } = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square);
-          addChatMessage(move ? `${aiPiece.type} at ${move.slice(0, 2)}` : "AI", message);
+          addChatMessage(move ? `${aiPiece.type} at ${move.slice(0, 2)}` : `${aiPiece.type} at ${aiPiece.square}`, message);
         }, 1000);
       }
     }
