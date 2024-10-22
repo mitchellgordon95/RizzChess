@@ -18,13 +18,11 @@ app.post('/api/chat', async (req, res) => {
     const chess = new Chess(board);
     
     // Construct a prompt for Claude
-    const claudePrompt = `You are an AI assistant helping to play a chess game. The current board state is:
+    const claudePrompt = `You are an AI assistant helping to play a chess game. 
 
-${boardToString(board)}
+The player has given this command: "${prompt}"
 
-A ${pieceType} at ${pieceSquare} has given this command: "${prompt}"
-
-Based on this command and the current board state, suggest a valid chess move for the ${pieceType} at ${pieceSquare}. 
+Based on this command, suggest a valid chess move for the ${pieceType} at ${pieceSquare}. 
 Respond in this format: "MOVE:e2e4" (replace e2e4 with your actual move) followed by a brief explanation of the move.
 If no valid move is possible based on the command, respond with "INVALID" followed by an explanation.
 
