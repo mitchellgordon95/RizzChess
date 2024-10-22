@@ -6,11 +6,7 @@ import './ChessGame.css';
 
 const getPieceSymbol = (piece) => {
   if (!piece) return '';
-  const symbols = {
-    p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
-    P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔'
-  };
-  return symbols[piece.type] || '';
+  return piece.type.toUpperCase();
 };
 
 const isKingCaptured = (fen) => {
