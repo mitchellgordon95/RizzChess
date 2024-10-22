@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from 'chess.js';
+import './ChessGame.css';
 
 // Extend Chess class to add setTurn method
 Chess.prototype.setTurn = function(turn) {
@@ -12,7 +13,6 @@ Chess.prototype.setTurn = function(turn) {
   fenParts[1] = turn;
   this.load(fenParts.join(' '));
 };
-import './ChessGame.css';
 
 const getPieceSymbol = (piece) => {
   if (!piece) return '';
