@@ -22,7 +22,10 @@ app.post('/api/chat', async (req, res) => {
 
 The player has given this command: "${prompt}"
 
-Based on this command, suggest a valid chess move for the ${pieceType} at ${pieceSquare}. 
+Here are the valid moves for the ${pieceType} at ${pieceSquare}:
+${chess.moves({ square: pieceSquare }).join(', ')}
+
+Based on this command and the valid moves, suggest a chess move for the ${pieceType} at ${pieceSquare}. 
 Respond in this format: "MOVE:e2e4" (replace e2e4 with your actual move) followed by a brief explanation of the move.
 If no valid move is possible based on the command, respond with "INVALID" followed by an explanation.
 
