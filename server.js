@@ -59,12 +59,12 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
     const aiResponse = response.data.content[0].text;
     console.log('Received response from Claude:', aiResponse);
 
-    const moveMatch = aiResponse.match(/MOVE:([a-h][1-8][a-h][1-8])/);
+    const moveMatch = aiResponse.match(/MOVE:([a-h][1-8][a-h][1-8])/i);
     
     let result;
     if (moveMatch) {
       const [, move] = moveMatch;
-      const explanation = aiResponse.split('\n').slice(1).join('\n');
+      const explanation = aiResponse.split('\n').slice(1).join('\n').trim();
       
       // Validate the move using chess.js
       const chessMove = chess.move({
@@ -76,7 +76,7 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
       if (chessMove) {
         result = { 
           message: explanation, 
-          move: move
+          move: move.toLowerCase()
         };
       } else {
         result = { 
@@ -95,6 +95,8 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
         move: null 
       };
     }
+
+    console.log('Processed result:', result);
 
     console.log('Sending response to client:', result);
     return res.json(result);
