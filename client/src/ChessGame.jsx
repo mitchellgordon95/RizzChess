@@ -65,9 +65,10 @@ const ChessGame = () => {
     setChatMessages(prevMessages => [...prevMessages, { sender, message }]);
   };
 
-  const generatePieceResponse = async (prompt, pieceType, pieceSquare) => {
+  const generatePieceResponse = async (prompt, pieceType, pieceSquare, isAIMove = false) => {
     try {
-      console.log('Sending request to server:', { prompt, board: game.fen(), pieceType, pieceSquare, turn: game.turn() });
+      const turn = isAIMove ? 'b' : game.turn();
+      console.log('Sending request to server:', { prompt, board: game.fen(), pieceType, pieceSquare, turn });
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -78,7 +79,7 @@ const ChessGame = () => {
           board: game.fen(), 
           pieceType: pieceType || 'unknown', 
           pieceSquare: pieceSquare || 'unknown',
-          turn: game.turn()
+          turn
         }),
       });
 
@@ -122,7 +123,7 @@ const ChessGame = () => {
         }
       }
       
-      const { message, move } = await generatePieceResponse(messageToSend, pieceType, pieceSquare);
+      const { message, move } = await generatePieceResponse(messageToSend, pieceType, pieceSquare, false);
       addChatMessage(move ? `${pieceType || 'Piece'} at ${move.slice(0, 2)}` : `${pieceType || 'Piece'} at ${pieceSquare || 'unknown'}`, message);
 
       // Generate AI's next move
@@ -131,7 +132,7 @@ const ChessGame = () => {
           const aiPiece = getRandomAIPiece(game);
           const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
           addChatMessage("Game", aiPrompt);
-          const { message, move } = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square);
+          const { message, move } = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, true);
           addChatMessage(move ? `${aiPiece.type} moves ${move}` : `${aiPiece.type} at ${aiPiece.square}`, message);
         }, 1000);
       }
