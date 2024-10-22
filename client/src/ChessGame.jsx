@@ -127,13 +127,20 @@ const ChessGame = () => {
       addChatMessage(move ? `${pieceType || 'Piece'} at ${move.slice(0, 2)}` : `${pieceType || 'Piece'} at ${pieceSquare || 'unknown'}`, message);
 
       // Generate AI's next move
-      if (!gameOver) {
+      if (!gameOver && move) {  // Only generate AI move if player's move was valid
         setTimeout(async () => {
           const aiPiece = getRandomAIPiece(game);
           const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
           addChatMessage("Game", aiPrompt);
-          const { message, move } = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, true);
-          addChatMessage(move ? `${aiPiece.type} moves ${move}` : `${aiPiece.type} at ${aiPiece.square}`, message);
+          let aiResponse;
+          do {
+            aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, true);
+            if (!aiResponse.move) {
+              console.log('AI suggested an invalid move, retrying...');
+              aiPiece = getRandomAIPiece(game);  // Get a new random piece for the next attempt
+            }
+          } while (!aiResponse.move);
+          addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
         }, 1000);
       }
     }

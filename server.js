@@ -72,6 +72,7 @@ Remember to roleplay as the ${pieceType}. Keep your explanation in character.`;
       
       try {
         const currentPosition = new Chess(board);
+        currentPosition.setTurn(turn);
         const moveResult = currentPosition.move(move);
         
         if (moveResult) {
@@ -85,7 +86,7 @@ Remember to roleplay as the ${pieceType}. Keep your explanation in character.`;
       } catch (error) {
         console.error('Error processing move:', error);
         result = { 
-          message: "The suggested move is not valid. Let's try a different approach.", 
+          message: `The suggested move ${move} is not valid for the current board state. Let's try a different approach.`, 
           move: null 
         };
       }
