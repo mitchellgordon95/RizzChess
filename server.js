@@ -25,13 +25,13 @@ app.post('/api/chat', async (req, res) => {
     console.log('Extracted piece and command:', { piece, command });
 
     // Construct a prompt for Claude
-    const claudePrompt = `You are playing as the ${piece} piece on a chess board. The current board state is:
+    const claudePrompt = `You are playing as the ${piece} piece on a chess board. Here are your valid moves based on your current position:
 
-${boardToString(board)}
+${getValidMoves(piece, board)}
 
 The player has given you this command: "${command}"
 
-Based on this command and your position on the board, suggest a valid chess move. 
+Based on this command and your available moves, suggest a valid chess move. 
 Respond in this format: "MOVE:e2e4" (replace e2e4 with your actual move) followed by a brief explanation of the move.
 If the move is not valid or possible, respond with "INVALID" followed by an explanation.
 
@@ -85,6 +85,58 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
     res.status(500).json({ error: 'An error occurred while processing your request.' });
   }
 });
+
+function getValidMoves(piece, fen) {
+  const [position, color] = piece.match(/([A-H][1-8])/i)[0].split('');
+  const pieceType = piece.replace(position, '').toLowerCase();
+  const board = fen.split(' ')[0];
+  const moves = [];
+
+  const directions = {
+    p: color === 'w' ? [[0, 1]] : [[0, -1]],
+    r: [[0, 1], [0, -1], [1, 0], [-1, 0]],
+    n: [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]],
+    b: [[1, 1], [1, -1], [-1, 1], [-1, -1]],
+    q: [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]],
+    k: [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]
+  };
+
+  const [file, rank] = [position.charCodeAt(0) - 65, parseInt(position[1]) - 1];
+
+  for (const [dx, dy] of directions[pieceType]) {
+    let newFile = file + dx;
+    let newRank = rank + dy;
+    if (newFile >= 0 && newFile < 8 && newRank >= 0 && newRank < 8) {
+      const newPos = `${String.fromCharCode(newFile + 65)}${newRank + 1}`;
+      const targetPiece = getPieceAt(board, newPos);
+      moves.push(`${newPos}${targetPiece ? ` (${targetPiece} present)` : ''}`);
+    }
+  }
+
+  return moves.join('\n');
+}
+
+function getPieceAt(fen, position) {
+  const board = fen.split(' ')[0];
+  const [file, rank] = position.split('');
+  const fileIndex = file.charCodeAt(0) - 65;
+  const rankIndex = 8 - parseInt(rank);
+
+  const rows = board.split('/');
+  let col = 0;
+  for (const char of rows[rankIndex]) {
+    if (isNaN(char)) {
+      if (col === fileIndex) {
+        return char;
+      }
+      col++;
+    } else {
+      col += parseInt(char);
+    }
+    if (col > fileIndex) break;
+  }
+  return null;
+}
 
 function boardToString(fen) {
   const board = fen.split(' ')[0];
