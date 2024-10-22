@@ -4,6 +4,15 @@ import { Chessboard } from "react-chessboard";
 import { Chess } from 'chess.js';
 import './ChessGame.css';
 
+const getPieceSymbol = (piece) => {
+  if (!piece) return '';
+  const symbols = {
+    p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚',
+    P: '♙', R: '♖', N: '♘', B: '♗', Q: '♕', K: '♔'
+  };
+  return symbols[piece.type] || '';
+};
+
 const isKingCaptured = (fen) => {
   const piecePlacement = fen.split(' ')[0];
   const whiteKing = piecePlacement.includes('K');
@@ -134,6 +143,14 @@ const ChessGame = () => {
     }
   };
 
+  const handleSquareClick = (square) => {
+    const piece = game.get(square);
+    if (piece) {
+      const pieceSymbol = getPieceSymbol(piece);
+      setCurrentMessage(prevMessage => `${prevMessage}@${square}${pieceSymbol} `);
+    }
+  };
+
   return (
     <ChakraProvider>
       <Box p={4}>
@@ -144,6 +161,7 @@ const ChessGame = () => {
               <Chessboard 
                 position={game.fen()} 
                 boardOrientation="white"
+                onSquareClick={handleSquareClick}
               />
             </Box>
             <Text mt={4} fontSize="lg">
