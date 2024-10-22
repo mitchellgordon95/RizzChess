@@ -90,9 +90,7 @@ const ChessGame = () => {
       
       if (data.move) {
         console.log('Valid move received:', data.move);
-        const from = data.move.slice(0, 2);
-        const to = data.move.slice(2, 4);
-        makeMove({ from, to });
+        makeMove(data.move);
       } else {
         console.log('No valid move in the response');
       }
@@ -133,7 +131,7 @@ const ChessGame = () => {
           const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
           addChatMessage("Game", aiPrompt);
           const { message, move } = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square);
-          addChatMessage(move ? `${aiPiece.type} at ${move.slice(0, 2)}` : `${aiPiece.type} at ${aiPiece.square}`, message);
+          addChatMessage(move ? `${aiPiece.type} moves ${move}` : `${aiPiece.type} at ${aiPiece.square}`, message);
         }, 1000);
       }
     }

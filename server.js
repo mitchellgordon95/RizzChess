@@ -26,7 +26,7 @@ Here are the valid moves for the ${pieceType} at ${pieceSquare}:
 ${chess.moves({ square: pieceSquare }).join(', ')}
 
 Based on this command and the valid moves, suggest a chess move for the ${pieceType} at ${pieceSquare}. 
-Respond in this format: "MOVE:[FEN]" (replace [FEN] with the FEN notation of the board after your move) followed by a brief explanation of the move.
+Respond in this format: "MOVE:[ALGEBRAIC]" (replace [ALGEBRAIC] with the algebraic notation of the move) followed by a brief explanation of the move.
 If no valid move is possible based on the command, respond with "INVALID" followed by an explanation.
 
 Remember to roleplay as the ${pieceType}. Keep your explanation in character.`;
@@ -64,7 +64,7 @@ Remember to roleplay as the ${pieceType}. Keep your explanation in character.`;
         if (moveResult) {
           result = { 
             message: explanation, 
-            move: move.toLowerCase()
+            move: move
           };
         } else {
           throw new Error("Invalid move");
