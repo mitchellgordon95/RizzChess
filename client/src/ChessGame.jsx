@@ -49,6 +49,10 @@ const ChessGame = () => {
         setGameOver(true);
         onOpen();
       }
+    } else {
+      // If the move is invalid, switch turns
+      gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
+      setGame(gameCopy);
     }
     return result;
   }, [game, onOpen]);
@@ -127,7 +131,7 @@ const ChessGame = () => {
       addChatMessage(move ? `${pieceType || 'Piece'} at ${move.slice(0, 2)}` : `${pieceType || 'Piece'} at ${pieceSquare || 'unknown'}`, message);
 
       // Generate AI's next move
-      if (!gameOver && move) {  // Only generate AI move if player's move was valid
+      if (!gameOver) {  // Generate AI move even if player's move was invalid
         setTimeout(async () => {
           const aiPiece = getRandomAIPiece(game);
           const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
@@ -136,7 +140,10 @@ const ChessGame = () => {
           if (aiResponse.move) {
             addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
           } else {
-            addChatMessage("Game", "The AI couldn't make a valid move. Skipping AI's turn.");
+            addChatMessage("Game", "The AI couldn't make a valid move. Switching back to player's turn.");
+            const gameCopy = new Chess(game.fen());
+            gameCopy.setTurn('w');
+            setGame(gameCopy);
           }
         }, 1000);
       }
