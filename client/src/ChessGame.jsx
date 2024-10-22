@@ -68,7 +68,12 @@ const ChessGame = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, board: game.fen(), pieceType, pieceSquare }),
+        body: JSON.stringify({ 
+          prompt, 
+          board: game.fen(), 
+          pieceType: pieceType || 'unknown', 
+          pieceSquare: pieceSquare || 'unknown' 
+        }),
       });
 
       if (!response.ok) {
