@@ -100,12 +100,13 @@ const ChessGame = () => {
 
   const handleSendMessage = async () => {
     if (currentMessage.trim() !== '') {
-      addChatMessage("You", currentMessage);
+      const messageToSend = currentMessage;
+      setCurrentMessage(''); // Clear the input immediately
       
-      const { message } = await generateAIResponse(currentMessage);
+      addChatMessage("You", messageToSend);
+      
+      const { message } = await generateAIResponse(messageToSend);
       addChatMessage("AI", message);
-
-      setCurrentMessage('');
     }
   };
 
