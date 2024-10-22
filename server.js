@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
+const { Chess } = require('chess.js');
 require('dotenv').config();
 
 const app = express();
@@ -13,6 +14,8 @@ app.post('/api/chat', async (req, res) => {
   try {
     const { prompt, board } = req.body;
     console.log('Received request:', { prompt, board });
+    
+    const chess = new Chess(board);
     
     // Extract piece and command from the prompt
     const match = prompt.match(/@(\w+)(.+)/);
@@ -62,10 +65,25 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
     if (moveMatch) {
       const [, move] = moveMatch;
       const explanation = aiResponse.split('\n').slice(1).join('\n');
-      result = { 
-        message: explanation, 
-        move: move
-      };
+      
+      // Validate the move using chess.js
+      const chessMove = chess.move({
+        from: move.slice(0, 2),
+        to: move.slice(2, 4),
+        promotion: 'q' // Always promote to queen for simplicity
+      });
+      
+      if (chessMove) {
+        result = { 
+          message: explanation, 
+          move: move
+        };
+      } else {
+        result = { 
+          message: "The suggested move is not valid. Please try another command.", 
+          move: null 
+        };
+      }
     } else if (aiResponse.includes("INVALID")) {
       result = { 
         message: aiResponse.replace("INVALID", "").trim(), 
@@ -87,64 +105,20 @@ Remember, you are roleplaying as the chess piece. Keep your explanation in chara
 });
 
 function getValidMoves(piece, fen) {
-  const [position, color] = piece.match(/([A-H][1-8])/i)[0].split('');
-  const pieceType = piece.replace(position, '').toLowerCase();
-  const board = fen.split(' ')[0];
-  const moves = [];
-
-  const directions = {
-    p: color === 'w' ? [[0, 1]] : [[0, -1]],
-    r: [[0, 1], [0, -1], [1, 0], [-1, 0]],
-    n: [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]],
-    b: [[1, 1], [1, -1], [-1, 1], [-1, -1]],
-    q: [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]],
-    k: [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]
-  };
-
-  const [file, rank] = [position.charCodeAt(0) - 65, parseInt(position[1]) - 1];
-
-  for (const [dx, dy] of directions[pieceType]) {
-    let newFile = file + dx;
-    let newRank = rank + dy;
-    if (newFile >= 0 && newFile < 8 && newRank >= 0 && newRank < 8) {
-      const newPos = `${String.fromCharCode(newFile + 65)}${newRank + 1}`;
-      const targetPiece = getPieceAt(board, newPos);
-      moves.push(`${newPos}${targetPiece ? ` (${targetPiece} present)` : ''}`);
-    }
-  }
-
-  return moves.join('\n');
-}
-
-function getPieceAt(fen, position) {
-  const board = fen.split(' ')[0];
-  const [file, rank] = position.split('');
-  const fileIndex = file.charCodeAt(0) - 65;
-  const rankIndex = 8 - parseInt(rank);
-
-  const rows = board.split('/');
-  let col = 0;
-  for (const char of rows[rankIndex]) {
-    if (isNaN(char)) {
-      if (col === fileIndex) {
-        return char;
-      }
-      col++;
-    } else {
-      col += parseInt(char);
-    }
-    if (col > fileIndex) break;
-  }
-  return null;
+  const chess = new Chess(fen);
+  const [file, rank] = piece.slice(-2).toLowerCase().split('');
+  const square = file + rank;
+  
+  const moves = chess.moves({ square: square, verbose: true });
+  return moves.map(move => {
+    const targetPiece = chess.get(move.to);
+    return `${move.to}${targetPiece ? ` (${targetPiece.type} present)` : ''}`;
+  }).join('\n');
 }
 
 function boardToString(fen) {
-  const board = fen.split(' ')[0];
-  return board.split('/').map(row => 
-    row.split('').map(char => 
-      isNaN(char) ? char : '.'.repeat(parseInt(char))
-    ).join(' ')
-  ).join('\n');
+  const chess = new Chess(fen);
+  return chess.ascii();
 }
 
 // The "catchall" handler: for any request that doesn't
