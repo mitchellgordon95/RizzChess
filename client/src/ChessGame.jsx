@@ -4,6 +4,13 @@ import { Chessboard } from "react-chessboard";
 import { Chess } from 'chess.js';
 import './ChessGame.css';
 
+const isKingCaptured = (fen) => {
+  const piecePlacement = fen.split(' ')[0];
+  const whiteKing = piecePlacement.includes('K');
+  const blackKing = piecePlacement.includes('k');
+  return !whiteKing || !blackKing;
+};
+
 const ChessGame = () => {
   const [game, setGame] = useState(new Chess());
   const [playerTurn, setPlayerTurn] = useState(true);
@@ -25,7 +32,7 @@ const ChessGame = () => {
       setGame(gameCopy);
       setPlayerTurn(prevTurn => !prevTurn);
 
-      if (gameCopy.game_over()) {
+      if (isKingCaptured(gameCopy.fen())) {
         setGameOver(true);
         onOpen();
       }
