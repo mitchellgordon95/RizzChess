@@ -67,7 +67,7 @@ const ChessGame = () => {
 
   const generatePieceResponse = async (prompt, pieceType, pieceSquare) => {
     try {
-      console.log('Sending request to server:', { prompt, board: game.fen(), pieceType, pieceSquare });
+      console.log('Sending request to server:', { prompt, board: game.fen(), pieceType, pieceSquare, turn: game.turn() });
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -77,7 +77,8 @@ const ChessGame = () => {
           prompt, 
           board: game.fen(), 
           pieceType: pieceType || 'unknown', 
-          pieceSquare: pieceSquare || 'unknown' 
+          pieceSquare: pieceSquare || 'unknown',
+          turn: game.turn()
         }),
       });
 

@@ -12,15 +12,24 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { prompt, board, pieceType, pieceSquare } = req.body;
-    console.log('Received request:', { prompt, board, pieceType, pieceSquare });
+    const { prompt, board, pieceType, pieceSquare, turn } = req.body;
+    console.log('Received request:', { prompt, board, pieceType, pieceSquare, turn });
     
     const chess = new Chess(board);
+    
+    if (chess.turn() !== turn) {
+      return res.json({ 
+        message: "It's not your turn. Please wait for the opponent to move.", 
+        move: null 
+      });
+    }
     
     // Construct a prompt for Claude
     const claudePrompt = `You are an AI assistant helping to play a chess game. 
 
 The player has given this command: "${prompt}"
+
+Current turn: ${turn === 'w' ? 'White' : 'Black'}
 
 Here are the valid moves for the ${pieceType} at ${pieceSquare}:
 ${chess.moves({ square: pieceSquare }).join(', ')}
