@@ -2,6 +2,16 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from 'chess.js';
+
+// Extend Chess class to add setTurn method
+Chess.prototype.setTurn = function(turn) {
+  if (turn !== 'w' && turn !== 'b') {
+    throw new Error('Invalid turn. Must be "w" or "b".');
+  }
+  const fenParts = this.fen().split(' ');
+  fenParts[1] = turn;
+  this.load(fenParts.join(' '));
+};
 import './ChessGame.css';
 
 const getPieceSymbol = (piece) => {
@@ -41,20 +51,24 @@ const ChessGame = () => {
 
   const makeMove = useCallback((move) => {
     const gameCopy = new Chess(game.fen());
-    const result = gameCopy.move(move);
-    if (result) {
-      setGame(gameCopy);
+    try {
+      const result = gameCopy.move(move);
+      if (result) {
+        setGame(gameCopy);
 
-      if (isKingCaptured(gameCopy.fen())) {
-        setGameOver(true);
-        onOpen();
+        if (isKingCaptured(gameCopy.fen())) {
+          setGameOver(true);
+          onOpen();
+        }
+        return result;
       }
-    } else {
-      // If the move is invalid, switch turns
-      gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
-      setGame(gameCopy);
+    } catch (error) {
+      console.error('Invalid move:', move, error);
     }
-    return result;
+    // If the move is invalid or an error occurred, switch turns
+    gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
+    setGame(gameCopy);
+    return null;
   }, [game, onOpen]);
 
   const resetGame = () => {
