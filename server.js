@@ -12,8 +12,8 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { prompt, board } = req.body;
-    console.log('Received request:', { prompt, board });
+    const { prompt, board, pieceType, pieceSquare } = req.body;
+    console.log('Received request:', { prompt, board, pieceType, pieceSquare });
     
     const chess = new Chess(board);
     
@@ -22,13 +22,13 @@ app.post('/api/chat', async (req, res) => {
 
 ${boardToString(board)}
 
-A player or AI has given this command: "${prompt}"
+A ${pieceType} at ${pieceSquare} has given this command: "${prompt}"
 
-Based on this command and the current board state, suggest a valid chess move for any piece. 
+Based on this command and the current board state, suggest a valid chess move for the ${pieceType} at ${pieceSquare}. 
 Respond in this format: "MOVE:e2e4" (replace e2e4 with your actual move) followed by a brief explanation of the move.
 If no valid move is possible based on the command, respond with "INVALID" followed by an explanation.
 
-Remember to roleplay as the piece you're moving. Keep your explanation in character.`;
+Remember to roleplay as the ${pieceType}. Keep your explanation in character.`;
 
     console.log('Sending prompt to Claude:', claudePrompt);
 

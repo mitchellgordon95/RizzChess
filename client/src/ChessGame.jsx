@@ -11,6 +11,15 @@ const isKingCaptured = (fen) => {
   return !whiteKing || !blackKing;
 };
 
+const getRandomAIPiece = (game) => {
+  const pieces = game.board().flat().filter(piece => piece && piece.color === 'b');
+  const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+  return {
+    type: randomPiece.type.toUpperCase(),
+    square: randomPiece.square
+  };
+};
+
 const ChessGame = () => {
   const [game, setGame] = useState(new Chess());
   const [gameOver, setGameOver] = useState(false);
@@ -51,15 +60,15 @@ const ChessGame = () => {
     setChatMessages(prevMessages => [...prevMessages, { sender, message }]);
   };
 
-  const generatePieceResponse = async (prompt) => {
+  const generatePieceResponse = async (prompt, pieceType, pieceSquare) => {
     try {
-      console.log('Sending request to server:', { prompt, board: game.fen() });
+      console.log('Sending request to server:', { prompt, board: game.fen(), pieceType, pieceSquare });
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, board: game.fen() }),
+        body: JSON.stringify({ prompt, board: game.fen(), pieceType, pieceSquare }),
       });
 
       if (!response.ok) {
@@ -98,10 +107,11 @@ const ChessGame = () => {
       // Generate AI's next move
       if (!gameOver) {
         setTimeout(async () => {
-          const aiPrompt = "Make a strategic move";
+          const aiPiece = getRandomAIPiece(game);
+          const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
           addChatMessage("AI", aiPrompt);
-          const { message, move } = await generatePieceResponse(aiPrompt);
-          addChatMessage(move ? `Piece at ${move.slice(0, 2)}` : "AI", message);
+          const { message, move } = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square);
+          addChatMessage(move ? `${aiPiece.type} at ${move.slice(0, 2)}` : "AI", message);
         }, 1000);
       }
     }
