@@ -2,6 +2,16 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const { Chess } = require('chess.js');
+
+// Extend Chess class to add setTurn method
+Chess.prototype.setTurn = function(turn) {
+  if (turn !== 'w' && turn !== 'b') {
+    throw new Error('Invalid turn. Must be "w" or "b".');
+  }
+  const fenParts = this.fen().split(' ');
+  fenParts[1] = turn;
+  this.load(fenParts.join(' '));
+};
 require('dotenv').config();
 
 const app = express();
@@ -16,13 +26,7 @@ app.post('/api/chat', async (req, res) => {
     console.log('Received request:', { prompt, board, pieceType, pieceSquare, turn });
     
     const chess = new Chess(board);
-    
-    if (chess.turn() !== turn) {
-      return res.json({ 
-        message: "It's not your turn. Please wait for the opponent to move.", 
-        move: null 
-      });
-    }
+    chess.setTurn(turn);
     
     // Construct a prompt for Claude
     const claudePrompt = `You are an AI assistant helping to play a chess game. 
