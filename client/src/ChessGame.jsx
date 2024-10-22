@@ -132,15 +132,12 @@ const ChessGame = () => {
           const aiPiece = getRandomAIPiece(game);
           const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
           addChatMessage("Game", aiPrompt);
-          let aiResponse;
-          do {
-            aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, true);
-            if (!aiResponse.move) {
-              console.log('AI suggested an invalid move, retrying...');
-              aiPiece = getRandomAIPiece(game);  // Get a new random piece for the next attempt
-            }
-          } while (!aiResponse.move);
-          addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
+          const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, true);
+          if (aiResponse.move) {
+            addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
+          } else {
+            addChatMessage("Game", "The AI couldn't make a valid move. Skipping AI's turn.");
+          }
         }, 1000);
       }
     }
