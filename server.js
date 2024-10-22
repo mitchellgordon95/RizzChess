@@ -54,24 +54,20 @@ Remember to roleplay as the ${pieceType}. Keep your explanation in character.`;
     
     let result;
     if (moveMatch) {
-      const [, fenAfterMove] = moveMatch;
+      const [, move] = moveMatch;
       const explanation = aiResponse.split('\n').slice(1).join('\n').trim();
       
-      // Validate the FEN and extract the move
       try {
         const currentPosition = new Chess(board);
-        const newPosition = new Chess(fenAfterMove);
+        const moveResult = currentPosition.move(move);
         
-        // Find the difference between the two positions
-        const move = findMoveBetweenPositions(currentPosition, newPosition);
-        
-        if (move) {
+        if (moveResult) {
           result = { 
             message: explanation, 
             move: move.toLowerCase()
           };
         } else {
-          throw new Error("Couldn't determine the move from the FEN");
+          throw new Error("Invalid move");
         }
       } catch (error) {
         console.error('Error processing move:', error);
