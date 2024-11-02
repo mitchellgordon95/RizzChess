@@ -149,12 +149,12 @@ const ChessGame = () => {
         setTimeout(async () => {
           const aiPiece = getRandomAIPiece(game);
           const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
-          addChatMessage("Game", aiPrompt);
+          addChatMessage("AI Opponent", aiPrompt);
           const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, true);
           if (aiResponse.move) {
             addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
           } else {
-            addChatMessage("Game", "The AI couldn't make a valid move. Switching back to player's turn.");
+            addChatMessage("AI Opponent", "The AI couldn't make a valid move. Switching back to player's turn.");
             const gameCopy = new Chess(game.fen());
             gameCopy.setTurn('w');
             setGame(gameCopy);
