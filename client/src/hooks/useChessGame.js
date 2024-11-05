@@ -32,26 +32,28 @@ export const useChessGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
 
-  const makeMove = useCallback((move) => {
-      console.log(game.fen())
-    const gameCopy = new Chess(game.fen());
+  const makeMove = useCallback((currentFen, move) => {
+    const gameCopy = new Chess(currentFen);
     try {
       const result = gameCopy.move(move);
       if (result) {
-        setGame(gameCopy);
-        if (isKingCaptured(gameCopy.fen())) {
-          setGameOver(true);
-          return { result, gameOver: true };
-        }
-        return { result, gameOver: false };
+        const isGameOver = isKingCaptured(gameCopy.fen());
+        return { 
+          game: gameCopy, 
+          result, 
+          gameOver: isGameOver 
+        };
       }
     } catch (error) {
       console.error('Invalid move:', move, error);
     }
     // If the move is invalid or an error occurred, switch turns
     gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
-    setGame(gameCopy);
-    return { result: null, gameOver: false };
+    return { 
+      game: gameCopy, 
+      result: null, 
+      gameOver: false 
+    };
   }, []);
 
   const resetGame = () => {
@@ -88,7 +90,11 @@ export const useChessGame = () => {
       const data = await response.json();
       
       if (data.move) {
-        const moveResult = makeMove(data.move);
+        const moveResult = makeMove(game.fen(), data.move);
+        setGame(moveResult.game);
+        if (moveResult.gameOver) {
+          setGameOver(true);
+        }
         return { ...data, gameOver: moveResult.gameOver };
       }
       
