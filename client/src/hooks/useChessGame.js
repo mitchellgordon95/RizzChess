@@ -99,7 +99,8 @@ export const useChessGame = () => {
         return { ...data, gameOver: moveResult.gameOver, fen: moveResult.fen };
       }
       
-      return data;
+      // No move
+      return { ...data, fen: _fen};
     } catch (error) {
       console.error("Error calling backend API:", error);
       return { message: "Sorry, I encountered an error while generating a response.", move: null };
