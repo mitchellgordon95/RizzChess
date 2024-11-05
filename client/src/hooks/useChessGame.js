@@ -52,7 +52,7 @@ export const useChessGame = () => {
     gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
     setGame(gameCopy);
     return { result: null, gameOver: false };
-  }, [game]);
+  }, []);
 
   const resetGame = () => {
     setGame(new Chess());
@@ -64,7 +64,7 @@ export const useChessGame = () => {
     setChatMessages(prevMessages => [...prevMessages, { sender, message }]);
   };
 
-  const generatePieceResponse = async (prompt, pieceType, pieceSquare, isAIMove = false) => {
+  const generatePieceResponse = useCallback(async (prompt, pieceType, pieceSquare, isAIMove = false) => {
     try {
       const turn = isAIMove ? 'b' : game.turn();
       const response = await fetch('/api/chat', {
@@ -97,7 +97,7 @@ export const useChessGame = () => {
       console.error("Error calling backend API:", error);
       return { message: "Sorry, I encountered an error while generating a response.", move: null };
     }
-  };
+  }, [makeMove]);
 
   return {
     game,
