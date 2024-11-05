@@ -14,8 +14,8 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { prompt, board, pieceType, pieceSquare, turn } = req.body;
-    console.log('Received request:', { prompt, board, pieceType, pieceSquare, turn });
+    const { prompt, board, pieceType, pieceSquare} = req.body;
+    console.log('Received request:', { prompt, board, pieceType, pieceSquare});
     
     const chess = new Chess(board);
     
@@ -24,7 +24,7 @@ app.post('/api/chat', async (req, res) => {
 
 The player has given this command: "${prompt}"
 
-Current turn: ${turn === 'w' ? 'White' : 'Black'}
+Current turn: ${chess.turn() === 'w' ? 'White' : 'Black'}
 
 Here are the valid moves for the ${pieceType} at ${pieceSquare}:
 ${chess.moves({ square: pieceSquare }).join(', ')}
