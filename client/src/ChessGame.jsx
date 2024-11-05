@@ -16,9 +16,7 @@ const ChessGame = () => {
     gameOver, 
     chatMessages, 
     resetGame, 
-    addChatMessage, 
-    generatePieceResponse,
-    getRandomAIPiece 
+    handleSendMessage, 
   } = useChessGame();
   
   const [currentMessage, setCurrentMessage] = useState('');

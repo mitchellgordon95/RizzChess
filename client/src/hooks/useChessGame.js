@@ -67,7 +67,7 @@ export const useChessGame = () => {
     setChatMessages(prevMessages => [...prevMessages, { sender, message }]);
   };
 
-  const generatePieceResponse = useCallback(async (prompt, pieceType, pieceSquare) => {
+  const generatePieceResponse = async (prompt, pieceType, pieceSquare, _fen) => {
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -76,7 +76,7 @@ export const useChessGame = () => {
         },
         body: JSON.stringify({ 
           prompt, 
-          board: fen, 
+          board: _fen, 
           pieceType: pieceType || 'unknown', 
           pieceSquare: pieceSquare || 'unknown',
         }),
@@ -89,8 +89,8 @@ export const useChessGame = () => {
       const data = await response.json();
       
       if (data.move) {
-        console.log(fen)
-        const moveResult = makeMove(fen, data.move);
+        console.log(_fen)
+        const moveResult = makeMove(_fen, data.move);
         console.log(moveResult.fen)
         setFen(moveResult.fen);
         if (moveResult.gameOver) {
@@ -104,7 +104,7 @@ export const useChessGame = () => {
       console.error("Error calling backend API:", error);
       return { message: "Sorry, I encountered an error while generating a response.", move: null };
     }
-  }, [fen]);
+  }
 
   const handleSendMessage = useCallback(async (messageToSend) => {
     if (messageToSend.trim() === '') return;
@@ -124,7 +124,7 @@ export const useChessGame = () => {
       }
     }
     
-    const response = await generatePieceResponse(messageToSend, pieceType, pieceSquare);
+    const response = await generatePieceResponse(messageToSend, pieceType, pieceSquare, fen);
     addChatMessage(
       response.move ? 
         `${pieceType || 'Piece'} at ${response.move.slice(0, 2)}` : 
@@ -160,9 +160,6 @@ export const useChessGame = () => {
     gameOver,
     chatMessages,
     resetGame,
-    addChatMessage,
-    generatePieceResponse,
-    getRandomAIPiece: () => getRandomAIPiece(fen),
     handleSendMessage
   };
 };
