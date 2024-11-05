@@ -32,7 +32,7 @@ export const useChessGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
 
-  const makeMove = useCallback((currentFen, move) => {
+  const makeMove = (currentFen, move) => {
     const gameCopy = new Chess(currentFen);
     try {
       const result = gameCopy.move(move);
@@ -54,7 +54,7 @@ export const useChessGame = () => {
       result: null, 
       gameOver: false 
     };
-  }, []);
+  };
 
   const resetGame = () => {
     setGame(new Chess());
