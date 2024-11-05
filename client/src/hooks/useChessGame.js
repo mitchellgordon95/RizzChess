@@ -142,7 +142,7 @@ export const useChessGame = () => {
       const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
       addChatMessage("AI Opponent", aiPrompt);
       
-      const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square);
+      const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, fen);
       if (aiResponse.move) {
         addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
         if (aiResponse.gameOver) {
