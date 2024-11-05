@@ -50,7 +50,8 @@ const ChessGame = () => {
     
     if (match) {
       pieceSquare = match[1];
-      const piece = game.get(pieceSquare);
+      const currentGame = new Chess(fen);
+      const piece = currentGame.get(pieceSquare);
       if (piece) {
         pieceType = piece.type.toUpperCase();
       }
