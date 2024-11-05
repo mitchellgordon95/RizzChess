@@ -33,6 +33,7 @@ export const useChessGame = () => {
   const [chatMessages, setChatMessages] = useState([]);
 
   const makeMove = useCallback((move) => {
+      console.log(game.fen())
     const gameCopy = new Chess(game.fen());
     try {
       const result = gameCopy.move(move);
