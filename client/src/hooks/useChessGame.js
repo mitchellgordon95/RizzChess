@@ -18,7 +18,8 @@ const isKingCaptured = (fen) => {
   return !whiteKing || !blackKing;
 };
 
-const getRandomAIPiece = (game) => {
+const getRandomAIPiece = (fen) => {
+  const game = new Chess(fen);
   const pieces = game.board().flat().filter(piece => piece && piece.color === 'b');
   const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
   return {
@@ -28,7 +29,7 @@ const getRandomAIPiece = (game) => {
 };
 
 export const useChessGame = () => {
-  const [game, setGame] = useState(new Chess());
+  const [fen, setFen] = useState(new Chess().fen());
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
 
@@ -57,7 +58,7 @@ export const useChessGame = () => {
   };
 
   const resetGame = () => {
-    setGame(new Chess());
+    setFen(new Chess().fen());
     setGameOver(false);
     setChatMessages([]);
   };
@@ -76,7 +77,7 @@ export const useChessGame = () => {
         },
         body: JSON.stringify({ 
           prompt, 
-          board: game.fen(), 
+          board: fen, 
           pieceType: pieceType || 'unknown', 
           pieceSquare: pieceSquare || 'unknown',
           turn
@@ -90,8 +91,8 @@ export const useChessGame = () => {
       const data = await response.json();
       
       if (data.move) {
-        const moveResult = makeMove(game.fen(), data.move);
-        setGame(moveResult.game);
+        const moveResult = makeMove(fen, data.move);
+        setFen(moveResult.game.fen());
         if (moveResult.gameOver) {
           setGameOver(true);
         }
@@ -103,15 +104,15 @@ export const useChessGame = () => {
       console.error("Error calling backend API:", error);
       return { message: "Sorry, I encountered an error while generating a response.", move: null };
     }
-  }, [game]);
+  }, [fen]);
 
   return {
-    game,
+    fen,
     gameOver,
     chatMessages,
     resetGame,
     addChatMessage,
     generatePieceResponse,
-    getRandomAIPiece: () => getRandomAIPiece(game)
+    getRandomAIPiece: () => getRandomAIPiece(fen)
   };
 };

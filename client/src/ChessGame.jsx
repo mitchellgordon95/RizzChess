@@ -89,6 +89,7 @@ const ChessGame = () => {
   };
 
   const handleSquareClick = (square) => {
+    const game = new Chess(fen);
     const piece = game.get(square);
     if (piece) {
       const pieceSymbol = getPieceSymbol(piece);
@@ -104,7 +105,7 @@ const ChessGame = () => {
             <Text fontSize="2xl" fontWeight="bold" mb={4}>Chess Game Demo</Text>
             <Box width="400px" height="400px">
               <Chessboard 
-                position={game.fen()} 
+                position={fen} 
                 boardOrientation="white"
                 onSquareClick={handleSquareClick}
               />
