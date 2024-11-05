@@ -40,7 +40,7 @@ export const useChessGame = () => {
       if (result) {
         const isGameOver = isKingCaptured(gameCopy.fen());
         return { 
-          game: gameCopy, 
+          fen: gameCopy.fen(), 
           result, 
           gameOver: isGameOver 
         };
@@ -51,7 +51,7 @@ export const useChessGame = () => {
     // If the move is invalid or an error occurred, switch turns
     gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
     return { 
-      game: gameCopy, 
+      fen: gameCopy.fen(), 
       result: null, 
       gameOver: false 
     };
@@ -67,9 +67,8 @@ export const useChessGame = () => {
     setChatMessages(prevMessages => [...prevMessages, { sender, message }]);
   };
 
-  const generatePieceResponse = useCallback(async (prompt, pieceType, pieceSquare, isAIMove = false) => {
+  const generatePieceResponse = useCallback(async (prompt, pieceType, pieceSquare) => {
     try {
-      const turn = isAIMove ? 'b' : 'w';
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -80,7 +79,6 @@ export const useChessGame = () => {
           board: fen, 
           pieceType: pieceType || 'unknown', 
           pieceSquare: pieceSquare || 'unknown',
-          turn
         }),
       });
 
@@ -91,8 +89,10 @@ export const useChessGame = () => {
       const data = await response.json();
       
       if (data.move) {
+        console.log(fen)
         const moveResult = makeMove(fen, data.move);
-        setFen(moveResult.game.fen());
+        console.log(moveResult.fen)
+        setFen(moveResult.fen);
         if (moveResult.gameOver) {
           setGameOver(true);
         }

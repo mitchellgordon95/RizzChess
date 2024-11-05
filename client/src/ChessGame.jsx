@@ -57,7 +57,7 @@ const ChessGame = () => {
       }
     }
     
-    const response = await generatePieceResponse(messageToSend, pieceType, pieceSquare, false);
+    const response = await generatePieceResponse(messageToSend, pieceType, pieceSquare);
     addChatMessage(
       response.move ? 
         `${pieceType || 'Piece'} at ${response.move.slice(0, 2)}` : 
@@ -77,7 +77,7 @@ const ChessGame = () => {
         const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
         addChatMessage("AI Opponent", aiPrompt);
         
-        const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, true);
+        const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square);
         if (aiResponse.move) {
           addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
           if (aiResponse.gameOver) {
