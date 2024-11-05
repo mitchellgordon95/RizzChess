@@ -68,7 +68,7 @@ export const useChessGame = () => {
 
   const generatePieceResponse = useCallback(async (prompt, pieceType, pieceSquare, isAIMove = false) => {
     try {
-      const turn = isAIMove ? 'b' : game.turn();
+      const turn = isAIMove ? 'b' : 'w';
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -103,13 +103,12 @@ export const useChessGame = () => {
       console.error("Error calling backend API:", error);
       return { message: "Sorry, I encountered an error while generating a response.", move: null };
     }
-  }, [makeMove]);
+  }, [game]);
 
   return {
     game,
     gameOver,
     chatMessages,
-    makeMove,
     resetGame,
     addChatMessage,
     generatePieceResponse,

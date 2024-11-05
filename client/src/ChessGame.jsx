@@ -14,7 +14,6 @@ const ChessGame = () => {
     game, 
     gameOver, 
     chatMessages, 
-    makeMove, 
     resetGame, 
     addChatMessage, 
     generatePieceResponse,
