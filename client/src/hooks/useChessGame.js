@@ -106,6 +106,55 @@ export const useChessGame = () => {
     }
   }, [fen]);
 
+  const handleSendMessage = useCallback(async (messageToSend) => {
+    if (messageToSend.trim() === '') return;
+    
+    addChatMessage("Player", messageToSend);
+    
+    // Parse the message to get the piece type and square
+    const match = messageToSend.match(/@([a-h][1-8])/);
+    let pieceType, pieceSquare;
+    
+    if (match) {
+      pieceSquare = match[1];
+      const currentGame = new Chess(fen);
+      const piece = currentGame.get(pieceSquare);
+      if (piece) {
+        pieceType = piece.type.toUpperCase();
+      }
+    }
+    
+    const response = await generatePieceResponse(messageToSend, pieceType, pieceSquare);
+    addChatMessage(
+      response.move ? 
+        `${pieceType || 'Piece'} at ${response.move.slice(0, 2)}` : 
+        `${pieceType || 'Piece'} at ${pieceSquare || 'unknown'}`, 
+      response.message
+    );
+
+    if (response.gameOver) {
+      return { gameOver: true };
+    }
+
+    // Generate AI's next move
+    if (!gameOver) {
+      const aiPiece = getRandomAIPiece(fen);
+      const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
+      addChatMessage("AI Opponent", aiPrompt);
+      
+      const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square);
+      if (aiResponse.move) {
+        addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
+        if (aiResponse.gameOver) {
+          return { gameOver: true };
+        }
+      } else {
+        addChatMessage("AI Opponent", "The AI couldn't make a valid move. Switching back to player's turn.");
+      }
+    }
+    return { gameOver: false };
+  }, [fen, gameOver, addChatMessage, generatePieceResponse]);
+
   return {
     fen,
     gameOver,
@@ -113,6 +162,7 @@ export const useChessGame = () => {
     resetGame,
     addChatMessage,
     generatePieceResponse,
-    getRandomAIPiece: () => getRandomAIPiece(fen)
+    getRandomAIPiece: () => getRandomAIPiece(fen),
+    handleSendMessage
   };
 };

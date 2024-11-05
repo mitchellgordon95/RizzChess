@@ -36,57 +36,15 @@ const ChessGame = () => {
     onClose();
   };
 
-  const handleSendMessage = async () => {
+  const handleMessageSubmit = async () => {
     if (currentMessage.trim() === '') return;
     
     const messageToSend = currentMessage;
     setCurrentMessage(''); // Clear the input immediately
     
-    addChatMessage("Player", messageToSend);
-    
-    // Parse the message to get the piece type and square
-    const match = messageToSend.match(/@([a-h][1-8])/);
-    let pieceType, pieceSquare;
-    
-    if (match) {
-      pieceSquare = match[1];
-      const currentGame = new Chess(fen);
-      const piece = currentGame.get(pieceSquare);
-      if (piece) {
-        pieceType = piece.type.toUpperCase();
-      }
-    }
-    
-    const response = await generatePieceResponse(messageToSend, pieceType, pieceSquare);
-    addChatMessage(
-      response.move ? 
-        `${pieceType || 'Piece'} at ${response.move.slice(0, 2)}` : 
-        `${pieceType || 'Piece'} at ${pieceSquare || 'unknown'}`, 
-      response.message
-    );
-
-    if (response.gameOver) {
+    const result = await handleSendMessage(messageToSend);
+    if (result.gameOver) {
       onOpen();
-      return;
-    }
-
-    // Generate AI's next move
-    if (!gameOver) {
-      setTimeout(async () => {
-        const aiPiece = getRandomAIPiece();
-        const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
-        addChatMessage("AI Opponent", aiPrompt);
-        
-        const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square);
-        if (aiResponse.move) {
-          addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
-          if (aiResponse.gameOver) {
-            onOpen();
-          }
-        } else {
-          addChatMessage("AI Opponent", "The AI couldn't make a valid move. Switching back to player's turn.");
-        }
-      }, 1000);
     }
   };
 
@@ -135,12 +93,12 @@ const ChessGame = () => {
                 onChange={(e) => setCurrentMessage(e.target.value)}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
-                    handleSendMessage();
+                    handleMessageSubmit();
                   }
                 }}
                 placeholder="Chat with the pieces..."
               />
-              <Button onClick={handleSendMessage}>Send</Button>
+              <Button onClick={handleMessageSubmit}>Send</Button>
             </HStack>
           </VStack>
         </HStack>
