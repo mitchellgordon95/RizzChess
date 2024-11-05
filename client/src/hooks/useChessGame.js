@@ -96,7 +96,7 @@ export const useChessGame = () => {
         if (moveResult.gameOver) {
           setGameOver(true);
         }
-        return { ...data, gameOver: moveResult.gameOver };
+        return { ...data, gameOver: moveResult.gameOver, fen: moveResult.fen };
       }
       
       return data;
@@ -142,7 +142,7 @@ export const useChessGame = () => {
       const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
       addChatMessage("AI Opponent", aiPrompt);
       
-      const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, fen);
+      const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, response.fen);
       if (aiResponse.move) {
         addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
         if (aiResponse.gameOver) {
