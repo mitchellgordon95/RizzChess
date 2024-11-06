@@ -29,11 +29,6 @@ const ChessGame = () => {
     }
   }, [chatMessages]);
 
-  const handleGameReset = () => {
-    resetGame();
-    onClose();
-  };
-
   const handleMessageSubmit = async () => {
     if (currentMessage.trim() === '') return;
     
