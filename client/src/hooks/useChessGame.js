@@ -18,34 +18,6 @@ const isKingCaptured = (fen) => {
   return !whiteKing || !blackKing;
 };
 
-const parsePieceReferences = (message, fen) => {
-  const references = [];
-  const invalidReferences = [];
-  const matches = message.match(/@([a-h][1-8][RNBQKP])/g) || [];
-  
-  const game = new Chess(fen);
-  
-  for (const match of matches) {
-    const square = match.slice(1, 3);
-    const expectedType = match[3];
-    const piece = game.get(square);
-    
-    if (piece && piece.type.toUpperCase() === expectedType) {
-      references.push({
-        square,
-        pieceType: piece.type.toUpperCase()
-      });
-    } else {
-      invalidReferences.push({
-        square,
-        expectedType
-      });
-    }
-  }
-  
-  return { references, invalidReferences };
-};
-
 const getRandomAIPiece = (fen) => {
   const game = new Chess(fen);
   const pieces = game.board().flat().filter(piece => piece && piece.color === 'b');
