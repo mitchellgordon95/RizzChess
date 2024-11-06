@@ -150,6 +150,13 @@ export const useChessGame = () => {
       // Update the current board state for the next piece
       if (response.fen) {
         currentFen = response.fen;
+        // If there are more pieces to move after this one, switch turn back to white
+        if (pieceReferences.indexOf({ pieceType, square }) < pieceReferences.length - 1) {
+          const game = new Chess(currentFen);
+          game.setTurn('w');
+          currentFen = game.fen();
+          setFen(currentFen);
+        }
       }
     }
 
