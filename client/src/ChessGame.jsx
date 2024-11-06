@@ -140,7 +140,7 @@ const ChessGame = () => {
               {chatMessages.map((msg, index) => (
                 <Text 
                   key={index} 
-                  className={`chat-message ${msg.sender === "Player" ? "player" : "other"}`}
+                  className={`chat-message ${msg.sender === "Player" || msg.sender === "AI Opponent" ? "player" : "other"}`}
                 >
                   <strong>{msg.sender}: </strong>{msg.message}
                 </Text>
