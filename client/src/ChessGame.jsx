@@ -133,11 +133,6 @@ const ChessGame = () => {
               ))}
             </Box>
             <VStack spacing={2} width="100%">
-              {errorMessage && (
-                <Text color="red.500" fontSize="sm" width="100%">
-                  {errorMessage}
-                </Text>
-              )}
               <HStack width="100%">
                 <Input
                   minW="200px"
@@ -156,6 +151,11 @@ const ChessGame = () => {
                 />
                 <Button onClick={handleMessageSubmit}>Send</Button>
               </HStack>
+              {errorMessage && (
+                <Text color="red.500" fontSize="sm" width="100%">
+                  {errorMessage}
+                </Text>
+              )}
             </VStack>
           </VStack>
         </HStack>
