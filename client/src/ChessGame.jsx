@@ -119,23 +119,31 @@ const ChessGame = () => {
                 </Text>
               ))}
             </Box>
-            <HStack>
-              <Input
-                minW="200px"
-                value={currentMessage}
-                onChange={(e) => {
-                  setCurrentMessage(e.target.value);
-                  updateHighlightedSquares(e.target.value);
-                }}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleMessageSubmit();
-                  }
-                }}
-                placeholder="Chat with the pieces..."
-              />
-              <Button onClick={handleMessageSubmit}>Send</Button>
-            </HStack>
+            <VStack spacing={2} width="100%">
+              {errorMessage && (
+                <Text color="red.500" fontSize="sm" width="100%">
+                  {errorMessage}
+                </Text>
+              )}
+              <HStack width="100%">
+                <Input
+                  minW="200px"
+                  value={currentMessage}
+                  onChange={(e) => {
+                    setCurrentMessage(e.target.value);
+                    updateHighlightedSquares(e.target.value);
+                    setErrorMessage(''); // Clear error when input changes
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleMessageSubmit();
+                    }
+                  }}
+                  placeholder="Chat with the pieces..."
+                />
+                <Button onClick={handleMessageSubmit}>Send</Button>
+              </HStack>
+            </VStack>
           </VStack>
         </HStack>
       </Box>

@@ -20,6 +20,7 @@ const isKingCaptured = (fen) => {
 
 const parsePieceReferences = (message, fen) => {
   const references = [];
+  const invalidReferences = [];
   const matches = message.match(/@([a-h][1-8][RNBQKP])/g) || [];
   
   const game = new Chess(fen);
@@ -34,10 +35,15 @@ const parsePieceReferences = (message, fen) => {
         square,
         pieceType: piece.type.toUpperCase()
       });
+    } else {
+      invalidReferences.push({
+        square,
+        expectedType
+      });
     }
   }
   
-  return references;
+  return { references, invalidReferences };
 };
 
 const getRandomAIPiece = (fen) => {
