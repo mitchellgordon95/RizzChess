@@ -45,16 +45,21 @@ export const useChessGame = () => {
           gameOver: isGameOver 
         };
       }
+      return {
+        fen: currentFen,
+        result: null,
+        gameOver: false
+      };
     } catch (error) {
       console.error('Invalid move:', move, error);
+      // If an error occurred, switch turns
+      gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
+      return { 
+        fen: gameCopy.fen(), 
+        result: null, 
+        gameOver: false 
+      };
     }
-    // If the move is invalid or an error occurred, switch turns
-    gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
-    return { 
-      fen: gameCopy.fen(), 
-      result: null, 
-      gameOver: false 
-    };
   };
 
   const resetGame = () => {
