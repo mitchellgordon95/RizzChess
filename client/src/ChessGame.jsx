@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Chess } from 'chess.js';
 import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
 import { Chessboard } from "react-chessboard";
-import { useChessGame } from './hooks/useChessGame';
+import { useChessGame, parsePieceReferences } from './hooks/useChessGame';
 import './ChessGame.css';
 
 const getPieceSymbol = (piece) => {
