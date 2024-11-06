@@ -137,7 +137,7 @@ const ChessGame = () => {
               <Button onClick={handleMessageSubmit}>Send</Button>
             </HStack>
           </VStack>
-        </VStack>
+        </HStack>
       </Box>
 
       <Modal isOpen={isOpen} onClose={onClose}>
