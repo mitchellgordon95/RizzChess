@@ -33,34 +33,6 @@ export const useChessGame = () => {
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
 
-  const makeMove = (currentFen, move) => {
-    const gameCopy = new Chess(currentFen);
-    try {
-      const result = gameCopy.move(move);
-      if (result) {
-        const isGameOver = isKingCaptured(gameCopy.fen());
-        return { 
-          fen: gameCopy.fen(), 
-          result, 
-          gameOver: isGameOver 
-        };
-      }
-      return {
-        fen: currentFen,
-        result: null,
-        gameOver: false
-      };
-    } catch (error) {
-      console.error('Invalid move:', move, error);
-      // If an error occurred, switch turns
-      gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
-      return { 
-        fen: gameCopy.fen(), 
-        result: null, 
-        gameOver: false 
-      };
-    }
-  };
 
   const resetGame = () => {
     setFen(new Chess().fen());
@@ -96,13 +68,27 @@ export const useChessGame = () => {
         
         if (data.move) {
           console.log(_fen)
-          const moveResult = makeMove(_fen, data.move);
-          console.log(moveResult.fen)
-          setFen(moveResult.fen);
-          if (moveResult.gameOver) {
-            setGameOver(true);
+          const gameCopy = new Chess(_fen);
+          try {
+            const result = gameCopy.move(data.move);
+            if (result) {
+              const newFen = gameCopy.fen();
+              const isGameOver = isKingCaptured(newFen);
+              setFen(newFen);
+              if (isGameOver) {
+                setGameOver(true);
+              }
+              return { ...data, gameOver: isGameOver, fen: newFen };
+            }
+            return { ...data, gameOver: false, fen: _fen };
+          } catch (error) {
+            console.error('Invalid move:', data.move, error);
+            // If an error occurred, switch turns
+            gameCopy.setTurn(gameCopy.turn() === 'w' ? 'b' : 'w');
+            const newFen = gameCopy.fen();
+            setFen(newFen);
+            return { ...data, gameOver: false, fen: newFen };
           }
-          return { ...data, gameOver: moveResult.gameOver, fen: moveResult.fen };
         }
         
         // No move
