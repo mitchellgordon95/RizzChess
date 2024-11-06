@@ -181,7 +181,10 @@ const ChessGame = () => {
             The game has ended. A king has been captured!
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={resetGame}>
+            <Button colorScheme="blue" mr={3} onClick={() => {
+              resetGame();
+              onClose();
+            }}>
               Play Again
             </Button>
           </ModalFooter>
