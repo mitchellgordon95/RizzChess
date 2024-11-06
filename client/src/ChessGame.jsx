@@ -20,6 +20,7 @@ const ChessGame = () => {
   } = useChessGame();
   
   const [currentMessage, setCurrentMessage] = useState('');
+  const [highlightedSquares, setHighlightedSquares] = useState({});
   const { isOpen, onOpen, onClose } = useDisclosure();
   const chatContainerRef = useRef(null);
 
@@ -41,12 +42,29 @@ const ChessGame = () => {
     }
   };
 
+  const updateHighlightedSquares = (message) => {
+    const squares = {};
+    const matches = message.match(/@([a-h][1-8])/g) || [];
+    
+    matches.forEach(match => {
+      const square = match.substring(1);
+      squares[square] = {
+        background: 'rgba(255, 255, 0, 0.4)',
+        borderRadius: '50%'
+      };
+    });
+    
+    setHighlightedSquares(squares);
+  };
+
   const handleSquareClick = (square) => {
     const game = new Chess(fen);
     const piece = game.get(square);
     if (piece) {
       const pieceSymbol = getPieceSymbol(piece);
-      setCurrentMessage(prevMessage => `${prevMessage}@${square}${pieceSymbol} `);
+      const newMessage = `${currentMessage}@${square}${pieceSymbol} `;
+      setCurrentMessage(newMessage);
+      updateHighlightedSquares(newMessage);
     }
   };
 
@@ -61,6 +79,7 @@ const ChessGame = () => {
                 position={fen} 
                 boardOrientation="white"
                 onSquareClick={handleSquareClick}
+                customSquareStyles={highlightedSquares}
               />
             </Box>
             <Text mt={4} fontSize="lg">
@@ -83,7 +102,10 @@ const ChessGame = () => {
             <HStack>
               <Input
                 value={currentMessage}
-                onChange={(e) => setCurrentMessage(e.target.value)}
+                onChange={(e) => {
+                  setCurrentMessage(e.target.value);
+                  updateHighlightedSquares(e.target.value);
+                }}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     handleMessageSubmit();
