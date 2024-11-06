@@ -63,51 +63,50 @@ export const useChessGame = () => {
     setChatMessages([]);
   };
 
-  const addChatMessage = (sender, message) => {
-    setChatMessages(prevMessages => [...prevMessages, { sender, message }]);
-  };
-
-  const generatePieceResponse = async (prompt, pieceType, pieceSquare, _fen) => {
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          prompt, 
-          board: _fen, 
-          pieceType: pieceType || 'unknown', 
-          pieceSquare: pieceSquare || 'unknown',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.move) {
-        console.log(_fen)
-        const moveResult = makeMove(_fen, data.move);
-        console.log(moveResult.fen)
-        setFen(moveResult.fen);
-        if (moveResult.gameOver) {
-          setGameOver(true);
-        }
-        return { ...data, gameOver: moveResult.gameOver, fen: moveResult.fen };
-      }
-      
-      // No move
-      return { ...data, fen: _fen};
-    } catch (error) {
-      console.error("Error calling backend API:", error);
-      return { message: "Sorry, I encountered an error while generating a response.", move: null };
-    }
-  }
-
   const handleSendMessage = useCallback(async (messageToSend) => {
+    const addChatMessage = (sender, message) => {
+      setChatMessages(prevMessages => [...prevMessages, { sender, message }]);
+    };
+
+    const generatePieceResponse = async (prompt, pieceType, pieceSquare, _fen) => {
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            prompt, 
+            board: _fen, 
+            pieceType: pieceType || 'unknown', 
+            pieceSquare: pieceSquare || 'unknown',
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.move) {
+          console.log(_fen)
+          const moveResult = makeMove(_fen, data.move);
+          console.log(moveResult.fen)
+          setFen(moveResult.fen);
+          if (moveResult.gameOver) {
+            setGameOver(true);
+          }
+          return { ...data, gameOver: moveResult.gameOver, fen: moveResult.fen };
+        }
+        
+        // No move
+        return { ...data, fen: _fen};
+      } catch (error) {
+        console.error("Error calling backend API:", error);
+        return { message: "Sorry, I encountered an error while generating a response.", move: null };
+      }
+    };
     if (messageToSend.trim() === '') return;
     
     addChatMessage("Player", messageToSend);
