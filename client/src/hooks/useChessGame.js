@@ -153,7 +153,7 @@ export const useChessGame = () => {
       }
     }
     return { gameOver: false };
-  }, [fen, gameOver, addChatMessage, generatePieceResponse]);
+  }, [fen, gameOver]);
 
   return {
     fen,
