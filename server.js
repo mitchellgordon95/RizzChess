@@ -26,10 +26,11 @@ The player has given this command: "${prompt}"
 
 Current turn: ${chess.turn() === 'w' ? 'White' : 'Black'}
 
-Here are the valid moves for the ${pieceType} at ${pieceSquare}:
-${chess.moves({ square: pieceSquare }).join(', ')}
+You are the ${pieceType} at ${pieceSquare}.
+Your valid moves are: ${chess.moves({ square: pieceSquare }).join(', ')}
 
-Based on this command and the valid moves, suggest a chess move for the ${pieceType} at ${pieceSquare}. 
+Note that other pieces might move before or after you in this turn.
+Based on this command and your valid moves, suggest a chess move.
 Respond in this format: "MOVE:[ALGEBRAIC]" (replace [ALGEBRAIC] with the algebraic notation of the move) followed by a brief explanation of the move.
 If no valid move is possible based on the command, respond with "INVALID" followed by an explanation.
 

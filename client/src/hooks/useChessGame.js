@@ -18,6 +18,28 @@ const isKingCaptured = (fen) => {
   return !whiteKing || !blackKing;
 };
 
+const parsePieceReferences = (message, fen) => {
+  const references = [];
+  const matches = message.match(/@([a-h][1-8][RNBQKP])/g) || [];
+  
+  const game = new Chess(fen);
+  
+  for (const match of matches) {
+    const square = match.slice(1, 3);
+    const expectedType = match[3];
+    const piece = game.get(square);
+    
+    if (piece && piece.type.toUpperCase() === expectedType) {
+      references.push({
+        square,
+        pieceType: piece.type.toUpperCase()
+      });
+    }
+  }
+  
+  return references;
+};
+
 const getRandomAIPiece = (fen) => {
   const game = new Chess(fen);
   const pieces = game.board().flat().filter(piece => piece && piece.color === 'b');
@@ -99,32 +121,36 @@ export const useChessGame = () => {
       }
     };
     if (messageToSend.trim() === '') return;
-    
     addChatMessage("Player", messageToSend);
-    
-    // Parse the message to get the piece type and square
-    const match = messageToSend.match(/@([a-h][1-8])/);
-    let pieceType, pieceSquare;
-    
-    if (match) {
-      pieceSquare = match[1];
-      const currentGame = new Chess(fen);
-      const piece = currentGame.get(pieceSquare);
-      if (piece) {
-        pieceType = piece.type.toUpperCase();
-      }
-    }
-    
-    const response = await generatePieceResponse(messageToSend, pieceType, pieceSquare, fen);
-    addChatMessage(
-      response.move ? 
-        `${pieceType || 'Piece'} at ${response.move.slice(0, 2)}` : 
-        `${pieceType || 'Piece'} at ${pieceSquare || 'unknown'}`, 
-      response.message
-    );
 
-    if (response.gameOver) {
-      return { gameOver: true };
+    // Get all piece references from the message
+    const pieceReferences = parsePieceReferences(messageToSend, fen);
+    let currentFen = fen;
+    
+    // Process each piece's move sequentially
+    for (const { pieceType, square } of pieceReferences) {
+      const response = await generatePieceResponse(
+        messageToSend, 
+        pieceType, 
+        square, 
+        currentFen
+      );
+
+      addChatMessage(
+        response.move ? 
+          `${pieceType} at ${response.move.slice(0, 2)}` : 
+          `${pieceType} at ${square}`, 
+        response.message
+      );
+
+      if (response.gameOver) {
+        return { gameOver: true };
+      }
+
+      // Update the current board state for the next piece
+      if (response.fen) {
+        currentFen = response.fen;
+      }
     }
 
     // Generate AI's next move

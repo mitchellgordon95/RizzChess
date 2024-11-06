@@ -42,14 +42,24 @@ const ChessGame = () => {
     }
   };
 
+  const getHighlightColor = (index) => {
+    const colors = [
+      'rgba(255, 255, 0, 0.4)',  // yellow
+      'rgba(0, 255, 0, 0.4)',    // green
+      'rgba(0, 255, 255, 0.4)',  // cyan
+      'rgba(255, 0, 255, 0.4)',  // magenta
+    ];
+    return colors[index % colors.length];
+  };
+
   const updateHighlightedSquares = (message) => {
     const squares = {};
-    const matches = message.match(/@([a-h][1-8])/g) || [];
+    const matches = message.match(/@([a-h][1-8][RNBQKP])/g) || [];
     
-    matches.forEach(match => {
-      const square = match.substring(1);
+    matches.forEach((match, index) => {
+      const square = match.substring(1, 3);
       squares[square] = {
-        background: 'rgba(255, 255, 0, 0.4)',
+        background: getHighlightColor(index),
         borderRadius: '50%'
       };
     });
@@ -62,7 +72,7 @@ const ChessGame = () => {
     const piece = game.get(square);
     if (piece) {
       const pieceSymbol = getPieceSymbol(piece);
-      const reference = `@${square}${pieceSymbol} `;
+      const reference = `@${square}${pieceSymbol}`;
       
       // If the square is already highlighted, remove all references to it
       if (highlightedSquares[square]) {
@@ -71,7 +81,7 @@ const ChessGame = () => {
         updateHighlightedSquares(newMessage);
       } else {
         // Add new reference
-        const newMessage = `${currentMessage}${reference}`;
+        const newMessage = `${currentMessage}${reference} `;
         setCurrentMessage(newMessage);
         updateHighlightedSquares(newMessage);
       }
