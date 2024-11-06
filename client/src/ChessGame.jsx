@@ -55,7 +55,7 @@ const ChessGame = () => {
       <Box p={4}>
         <HStack spacing={8} alignItems="flex-start">
           <VStack>
-            <Text fontSize="2xl" fontWeight="bold" mb={4}>Chess Game Demo</Text>
+            <Text fontSize="2xl" fontWeight="bold" mb={4}>Rizz Chess</Text>
             <Box width="400px" height="400px">
               <Chessboard 
                 position={fen} 
