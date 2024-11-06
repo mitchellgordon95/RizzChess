@@ -90,11 +90,11 @@ const ChessGame = () => {
 
   return (
     <ChakraProvider>
-      <Box p={4}>
-        <HStack spacing={8} alignItems="flex-start">
+      <Box p={4} maxW="600px" mx="auto">
+        <VStack spacing={8} align="stretch">
           <VStack>
             <Text fontSize="2xl" fontWeight="bold" mb={4}>Rizz Chess</Text>
-            <Box width="400px" height="400px">
+            <Box width="100%" maxW="500px" height="500px">
               <Chessboard 
                 position={fen} 
                 boardOrientation="white"
@@ -110,7 +110,7 @@ const ChessGame = () => {
             </Button>
           </VStack>
           
-          <VStack width="300px" bg="gray.100" p={4} borderRadius="md" alignItems="stretch">
+          <VStack bg="gray.100" p={4} borderRadius="md" alignItems="stretch">
             <Text fontSize="xl" fontWeight="bold" mb={4}>Chat</Text>
             <Box ref={chatContainerRef} height="300px" overflowY="auto" mb={4} bg="white" p={2} borderRadius="md">
               {chatMessages.map((msg, index) => (
@@ -121,6 +121,7 @@ const ChessGame = () => {
             </Box>
             <HStack>
               <Input
+                minW="200px"
                 value={currentMessage}
                 onChange={(e) => {
                   setCurrentMessage(e.target.value);
