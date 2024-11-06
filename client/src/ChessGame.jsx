@@ -138,7 +138,10 @@ const ChessGame = () => {
             <Text fontSize="xl" fontWeight="bold" mb={4}>Chat</Text>
             <Box ref={chatContainerRef} height="300px" overflowY="auto" mb={4} bg="white" p={2} borderRadius="md">
               {chatMessages.map((msg, index) => (
-                <Text key={index} mb={2}>
+                <Text 
+                  key={index} 
+                  className={`chat-message ${msg.sender === "Player" ? "player" : "other"}`}
+                >
                   <strong>{msg.sender}: </strong>{msg.message}
                 </Text>
               ))}
