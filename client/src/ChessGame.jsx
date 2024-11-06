@@ -30,6 +30,20 @@ const ChessGame = () => {
     }
   }, [chatMessages]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleMessageSubmit = async () => {
@@ -118,9 +132,6 @@ const ChessGame = () => {
             <Text fontSize="lg">
               {gameOver ? "Game Over!" : "Chat with the pieces"}
             </Text>
-            <Button colorScheme="blue" onClick={resetGame}>
-              Reset Game
-            </Button>
           </VStack>
           
           <VStack flex="2" bg="gray.100" p={4} borderRadius="md" alignItems="stretch" height="600px">
