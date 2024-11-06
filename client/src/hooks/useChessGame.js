@@ -130,11 +130,11 @@ export const useChessGame = () => {
     addChatMessage("Player", messageToSend);
 
     // Get all piece references from the message
-    const pieceReferences = parsePieceReferences(messageToSend, fen);
+    const { references } = parsePieceReferences(messageToSend, fen);
     let currentFen = fen;
     
     // Process each piece's move sequentially
-    for (const { pieceType, square } of pieceReferences) {
+    for (const { pieceType, square } of references) {
       // Ensure it's white's turn before generating response
       const game = new Chess(currentFen);
       game.setTurn('w');
