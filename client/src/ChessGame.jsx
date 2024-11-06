@@ -90,11 +90,11 @@ const ChessGame = () => {
 
   return (
     <ChakraProvider>
-      <Box p={4} maxW="600px" mx="auto">
-        <VStack spacing={8} align="stretch">
-          <VStack>
-            <Text fontSize="2xl" fontWeight="bold" mb={4}>Rizz Chess</Text>
-            <Box width="100%" maxW="500px" height="500px">
+      <Box p={4} maxW="1200px" mx="auto">
+        <Text fontSize="2xl" fontWeight="bold" mb={4} textAlign="center">Rizz Chess</Text>
+        <HStack spacing={8} align="flex-start">
+          <VStack flex="1" maxW="33%">
+            <Box width="100%" aspectRatio="1">
               <Chessboard 
                 position={fen} 
                 boardOrientation="white"
@@ -102,15 +102,15 @@ const ChessGame = () => {
                 customSquareStyles={highlightedSquares}
               />
             </Box>
-            <Text mt={4} fontSize="lg">
+            <Text fontSize="lg">
               {gameOver ? "Game Over!" : "Chat with the pieces"}
             </Text>
-            <Button colorScheme="blue" onClick={resetGame} mt={4}>
+            <Button colorScheme="blue" onClick={resetGame}>
               Reset Game
             </Button>
           </VStack>
           
-          <VStack bg="gray.100" p={4} borderRadius="md" alignItems="stretch">
+          <VStack flex="2" bg="gray.100" p={4} borderRadius="md" alignItems="stretch" height="600px">
             <Text fontSize="xl" fontWeight="bold" mb={4}>Chat</Text>
             <Box ref={chatContainerRef} height="300px" overflowY="auto" mb={4} bg="white" p={2} borderRadius="md">
               {chatMessages.map((msg, index) => (
