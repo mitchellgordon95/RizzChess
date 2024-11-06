@@ -62,9 +62,19 @@ const ChessGame = () => {
     const piece = game.get(square);
     if (piece) {
       const pieceSymbol = getPieceSymbol(piece);
-      const newMessage = `${currentMessage}@${square}${pieceSymbol} `;
-      setCurrentMessage(newMessage);
-      updateHighlightedSquares(newMessage);
+      const reference = `@${square}${pieceSymbol} `;
+      
+      // If the square is already highlighted, remove all references to it
+      if (highlightedSquares[square]) {
+        const newMessage = currentMessage.replace(new RegExp(reference, 'g'), '');
+        setCurrentMessage(newMessage);
+        updateHighlightedSquares(newMessage);
+      } else {
+        // Add new reference
+        const newMessage = `${currentMessage}${reference}`;
+        setCurrentMessage(newMessage);
+        updateHighlightedSquares(newMessage);
+      }
     }
   };
 
