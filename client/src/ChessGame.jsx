@@ -30,11 +30,24 @@ const ChessGame = () => {
     }
   }, [chatMessages]);
 
+  const [errorMessage, setErrorMessage] = useState('');
+
   const handleMessageSubmit = async () => {
     if (currentMessage.trim() === '') return;
     
     const messageToSend = currentMessage;
     setCurrentMessage(''); // Clear the input immediately
+    setErrorMessage(''); // Clear any previous error message
+    
+    const { references, invalidReferences } = parsePieceReferences(messageToSend, fen);
+    
+    if (invalidReferences.length > 0) {
+      const invalidPieces = invalidReferences.map(ref => 
+        `${ref.expectedType} at ${ref.square}`
+      ).join(', ');
+      setErrorMessage(`Invalid piece references: ${invalidPieces}`);
+      return;
+    }
     
     const result = await handleSendMessage(messageToSend);
     if (result.gameOver) {
