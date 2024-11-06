@@ -36,7 +36,6 @@ const ChessGame = () => {
     if (currentMessage.trim() === '') return;
     
     const messageToSend = currentMessage;
-    setCurrentMessage(''); // Clear the input immediately
     setErrorMessage(''); // Clear any previous error message
     
     const { references, invalidReferences } = parsePieceReferences(messageToSend, fen);
@@ -49,6 +48,7 @@ const ChessGame = () => {
       return;
     }
     
+    setCurrentMessage(''); // Only clear input if there are no invalid references
     const result = await handleSendMessage(messageToSend);
     if (result.gameOver) {
       onOpen();
