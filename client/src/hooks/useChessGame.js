@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useStockfish } from './useStockfish';
 import { Chess } from 'chess.js';
 
 // Extend Chess class to add setTurn method
@@ -60,6 +61,7 @@ export const useChessGame = () => {
   const [fen, setFen] = useState(new Chess().fen());
   const [gameOver, setGameOver] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
+  const { getBestMove } = useStockfish();
 
 
   const resetGame = () => {
@@ -165,7 +167,7 @@ export const useChessGame = () => {
       }
     }
 
-    // Generate AI's next move
+    // Generate AI's next move using Stockfish
     if (!gameOver) {
       const aiPiece = getRandomAIPiece(fen);
       const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
@@ -177,13 +179,23 @@ export const useChessGame = () => {
       currentFen = game.fen();
       setFen(currentFen);
 
-      const aiResponse = await generatePieceResponse(aiPrompt, aiPiece.type, aiPiece.square, currentFen);
-      if (aiResponse.move) {
-        addChatMessage(`${aiPiece.type} moves ${aiResponse.move}`, aiResponse.message);
-        if (aiResponse.gameOver) {
-          return { gameOver: true };
+      try {
+        const bestMove = await getBestMove(currentFen);
+        if (bestMove) {
+          const gameCopy = new Chess(currentFen);
+          const result = gameCopy.move(bestMove);
+          if (result) {
+            const newFen = gameCopy.fen();
+            const isGameOver = isKingCaptured(newFen);
+            setFen(newFen);
+            addChatMessage(`${aiPiece.type} moves ${bestMove}`, "I made what I believe is the best move.");
+            if (isGameOver) {
+              return { gameOver: true };
+            }
+          }
         }
-      } else {
+      } catch (error) {
+        console.error("Error getting AI move:", error);
         addChatMessage("AI Opponent", "The AI couldn't make a valid move. Switching back to player's turn.");
       }
     }
