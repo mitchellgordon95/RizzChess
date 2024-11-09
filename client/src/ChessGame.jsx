@@ -22,7 +22,7 @@ const ChessGame = () => {
   
   const [currentMessage, setCurrentMessage] = useState('');
   const [highlightedSquares, setHighlightedSquares] = useState({});
-  const [selectedPiece, setSelectedPiece] = useState(null);
+  const [selectedPieces, setSelectedPieces] = useState([]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const chatContainerRef = useRef(null);
 
@@ -115,14 +115,20 @@ const ChessGame = () => {
         const newMessage = currentMessage.replace(new RegExp(reference, 'g'), '');
         setCurrentMessage(newMessage);
         updateHighlightedSquares(newMessage);
+        setSelectedPieces(prev => prev.filter(p => p.square !== square));
       } else {
         // Add new reference
         const newMessage = `${currentMessage}${reference} `;
         setCurrentMessage(newMessage);
         updateHighlightedSquares(newMessage);
+        setSelectedPieces(prev => [...prev, {
+          ...piece,
+          square,
+          personality: PIECE_PERSONALITIES[pieceSymbol]
+        }]);
       }
     } else {
-      setSelectedPiece(null);
+      setSelectedPieces([]);
     }
   };
 
@@ -153,26 +159,26 @@ const ChessGame = () => {
                 customSquareStyles={highlightedSquares}
               />
             </Box>
-            {selectedPiece && (
-              <Card width="100%">
+            {selectedPieces.map((piece, index) => (
+              <Card width="100%" key={piece.square} mb={2}>
                 <CardBody>
                   <VStack align="start" spacing={1}>
                     <Text fontSize="md" fontWeight="bold">
-                      {selectedPiece.type.toUpperCase()} at {selectedPiece.square}
+                      {piece.type.toUpperCase()} at {piece.square}
                     </Text>
                     <Text fontSize="sm">
-                      <strong>Personality:</strong> {selectedPiece.personality.personality}
+                      <strong>Personality:</strong> {piece.personality.personality}
                     </Text>
                     <Text fontSize="sm">
-                      <strong>Catchphrase:</strong> {selectedPiece.personality.catchphrase}
+                      <strong>Catchphrase:</strong> {piece.personality.catchphrase}
                     </Text>
                     <Text fontSize="sm">
-                      <strong>Risk Tolerance:</strong> {selectedPiece.personality.riskTolerance}
+                      <strong>Risk Tolerance:</strong> {piece.personality.riskTolerance}
                     </Text>
                   </VStack>
                 </CardBody>
               </Card>
-            )}
+            ))}
             <Text fontSize="lg">
               {gameOver ? "Game Over!" : "Chat with the pieces"}
             </Text>
