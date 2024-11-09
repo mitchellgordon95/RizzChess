@@ -30,7 +30,17 @@ app.post('/api/chat', async (req, res) => {
       row.forEach((square, j) => {
         if (square && square.color === piece.color) {
           const targetSquare = String.fromCharCode(97 + j) + (8 - i);
-          if (chess.moves({ square: pieceSquare }).includes(targetSquare)) {
+          // Check if this piece controls squares around friendly pieces
+          const testPosition = new Chess(chess.fen());
+          const moves = testPosition.moves({ square: pieceSquare, verbose: true });
+          if (moves.some(move => {
+            // Check if the move's destination is on a line that passes through this friendly piece
+            const dx = Math.abs(move.to.charCodeAt(0) - targetSquare.charCodeAt(0));
+            const dy = Math.abs(move.to[1] - targetSquare[1]);
+            return (dx === 0 && dy === 0) || // same square
+                   (dx === dy) || // diagonal
+                   (dx === 0 || dy === 0); // straight line
+          })) {
             defendingPieces.push(`${square.type.toUpperCase()} at ${targetSquare}`);
           }
         }
@@ -43,7 +53,8 @@ app.post('/api/chat', async (req, res) => {
       row.forEach((square, j) => {
         if (square && square.color !== piece.color) {
           const targetSquare = String.fromCharCode(97 + j) + (8 - i);
-          if (chess.moves({ square: pieceSquare }).includes(targetSquare)) {
+          const moves = chess.moves({ square: pieceSquare, verbose: true });
+          if (moves.some(move => move.to === targetSquare)) {
             attackingPieces.push(`${square.type.toUpperCase()} at ${targetSquare}`);
           }
         }
@@ -61,7 +72,16 @@ app.post('/api/chat', async (req, res) => {
         row.forEach((square, j) => {
           if (square && square.color === piece.color) {
             const targetSquare = String.fromCharCode(97 + j) + (8 - i);
-            if (testPosition.moves({ square: move.slice(-2) }).includes(targetSquare)) {
+            // Check if the moved piece would control squares around friendly pieces
+            const moves = testPosition.moves({ square: move.slice(-2), verbose: true });
+            if (moves.some(futureMove => {
+              // Check if the move's destination is on a line that passes through this friendly piece
+              const dx = Math.abs(futureMove.to.charCodeAt(0) - targetSquare.charCodeAt(0));
+              const dy = Math.abs(futureMove.to[1] - targetSquare[1]);
+              return (dx === 0 && dy === 0) || // same square
+                     (dx === dy) || // diagonal
+                     (dx === 0 || dy === 0); // straight line
+            })) {
               wouldDefend.push(`${square.type.toUpperCase()} at ${targetSquare}`);
             }
           }
@@ -74,7 +94,8 @@ app.post('/api/chat', async (req, res) => {
         row.forEach((square, j) => {
           if (square && square.color !== piece.color) {
             const targetSquare = String.fromCharCode(97 + j) + (8 - i);
-            if (testPosition.moves({ square: move.slice(-2) }).includes(targetSquare)) {
+            const moves = testPosition.moves({ square: move.slice(-2), verbose: true });
+            if (moves.some(futureMove => futureMove.to === targetSquare)) {
               wouldAttack.push(`${square.type.toUpperCase()} at ${targetSquare}`);
             }
           }
