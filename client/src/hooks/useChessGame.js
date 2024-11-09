@@ -169,9 +169,7 @@ export const useChessGame = () => {
 
     // Generate AI's next move using Stockfish
     if (!gameOver) {
-      const aiPiece = getRandomAIPiece(fen);
-      const aiPrompt = `${aiPiece.type} at ${aiPiece.square}: Make a strategic move`;
-      addChatMessage("AI Opponent", aiPrompt);
+      addChatMessage("Stockfish", "Calculating best move...");
       
       // Ensure it's black's turn before generating response
       const game = new Chess(currentFen);
@@ -188,7 +186,7 @@ export const useChessGame = () => {
             const newFen = gameCopy.fen();
             const isGameOver = isKingCaptured(newFen);
             setFen(newFen);
-            addChatMessage(`${aiPiece.type} moves ${bestMove}`, "I made what I believe is the best move.");
+            addChatMessage("Stockfish", `I think ${bestMove} is the best move.`);
             if (isGameOver) {
               return { gameOver: true };
             }
@@ -196,7 +194,7 @@ export const useChessGame = () => {
         }
       } catch (error) {
         console.error("Error getting AI move:", error);
-        addChatMessage("AI Opponent", "The AI couldn't make a valid move. Switching back to player's turn.");
+        addChatMessage("Stockfish", "I couldn't calculate a valid move. Switching back to player's turn.");
       }
     }
     return { gameOver: false };
