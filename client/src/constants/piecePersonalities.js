@@ -1,5 +1,5 @@
 // Piece personality traits and game rules
-export const PIECE_PERSONALITIES = {
+const PIECE_PERSONALITIES = {
   P: {
     personality: "Eager rookie soldier, enthusiastic but cautious. Dreams of promotion.",
     catchphrase: "One step at a time!",
@@ -32,7 +32,7 @@ export const PIECE_PERSONALITIES = {
   }
 };
 
-export const GAME_RULES = {
+const GAME_RULES = {
   standardRules: [
     "Each piece can only move once per turn",
     "Pieces must move according to their traditional chess movement patterns",
@@ -51,4 +51,9 @@ export const GAME_RULES = {
     "Pieces support their allies and coordinate their actions",
     "Personality traits influence decision-making but don't override tactical sense"
   ]
+};
+
+module.exports = {
+  PIECE_PERSONALITIES,
+  GAME_RULES
 };
