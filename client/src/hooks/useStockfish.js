@@ -4,8 +4,8 @@ export const useStockfish = () => {
   const engineRef = useRef(null);
 
   useEffect(() => {
-    // Initialize Stockfish
-    const stockfish = new Worker(require('stockfish/stockfish.js'));
+    // Initialize Stockfish from public directory
+    const stockfish = new Worker('/stockfish.js');
     
     stockfish.postMessage('uci');
     stockfish.postMessage('isready');
