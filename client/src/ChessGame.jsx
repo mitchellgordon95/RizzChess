@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Chess } from 'chess.js';
-import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
+import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Card, CardBody } from "@chakra-ui/react";
 import { Chessboard } from "react-chessboard";
 import { useChessGame, parsePieceReferences } from './hooks/useChessGame';
 import './ChessGame.css';
@@ -21,6 +21,7 @@ const ChessGame = () => {
   
   const [currentMessage, setCurrentMessage] = useState('');
   const [highlightedSquares, setHighlightedSquares] = useState({});
+  const [selectedPiece, setSelectedPiece] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const chatContainerRef = useRef(null);
 
@@ -101,6 +102,13 @@ const ChessGame = () => {
       const pieceSymbol = getPieceSymbol(piece);
       const reference = `@${square}${pieceSymbol}`;
       
+      // Update selected piece
+      setSelectedPiece({
+        ...piece,
+        square,
+        personality: PIECE_PERSONALITIES[pieceSymbol]
+      });
+      
       // If the square is already highlighted, remove all references to it
       if (highlightedSquares[square]) {
         const newMessage = currentMessage.replace(new RegExp(reference, 'g'), '');
@@ -112,6 +120,8 @@ const ChessGame = () => {
         setCurrentMessage(newMessage);
         updateHighlightedSquares(newMessage);
       }
+    } else {
+      setSelectedPiece(null);
     }
   };
 
@@ -142,6 +152,26 @@ const ChessGame = () => {
                 customSquareStyles={highlightedSquares}
               />
             </Box>
+            {selectedPiece && (
+              <Card width="100%">
+                <CardBody>
+                  <VStack align="start" spacing={1}>
+                    <Text fontSize="md" fontWeight="bold">
+                      {selectedPiece.type.toUpperCase()} at {selectedPiece.square}
+                    </Text>
+                    <Text fontSize="sm">
+                      <strong>Personality:</strong> {selectedPiece.personality.personality}
+                    </Text>
+                    <Text fontSize="sm">
+                      <strong>Catchphrase:</strong> {selectedPiece.personality.catchphrase}
+                    </Text>
+                    <Text fontSize="sm">
+                      <strong>Risk Tolerance:</strong> {selectedPiece.personality.riskTolerance}
+                    </Text>
+                  </VStack>
+                </CardBody>
+              </Card>
+            )}
             <Text fontSize="lg">
               {gameOver ? "Game Over!" : "Chat with the pieces"}
             </Text>
