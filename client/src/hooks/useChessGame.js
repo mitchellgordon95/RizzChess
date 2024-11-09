@@ -200,7 +200,7 @@ export const useChessGame = () => {
       }
     }
     return { gameOver: false };
-  }, [fen, gameOver]);
+  }, [fen, gameOver, getBestMove]);
 
   return {
     fen,
