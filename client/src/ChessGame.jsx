@@ -103,12 +103,6 @@ const ChessGame = () => {
       const pieceSymbol = getPieceSymbol(piece);
       const reference = `@${square}${pieceSymbol}`;
       
-      // Update selected piece
-      setSelectedPiece({
-        ...piece,
-        square,
-        personality: PIECE_PERSONALITIES[pieceSymbol]
-      });
       
       // If the square is already highlighted, remove all references to it
       if (highlightedSquares[square]) {
