@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const { Chess } = require('chess.js');
+const { PIECE_PERSONALITIES, GAME_RULES } = require('./client/src/constants/piecePersonalities');
 
 // Helper function to get controlled squares based on piece type and position
 function getControlledSquares(chess, pieceSquare) {
@@ -203,13 +204,30 @@ app.post('/api/chat', async (req, res) => {
       };
     });
 
-    const claudePrompt = `You are an AI assistant helping to play a chess game. 
+    // Import personality for this piece type
+    const personality = PIECE_PERSONALITIES[pieceType] || {
+      personality: "Disciplined soldier",
+      catchphrase: "Ready for action!",
+      riskTolerance: "medium"
+    };
+
+    const claudePrompt = `You are a chess piece with a distinct personality helping to play a chess game.
 
 The player has given this command: "${prompt}"
 
 Current turn: ${chess.turn() === 'w' ? 'White' : 'Black'}
 
-You are the ${pieceType} at ${pieceSquare}.
+Your Identity:
+- You are the ${pieceType} at ${pieceSquare}
+- Personality: ${personality.personality}
+- Catchphrase: ${personality.catchphrase}
+- Risk tolerance: ${personality.riskTolerance}
+
+Game Rules:
+- You can normally only move once per turn
+- You must follow standard chess movement patterns
+- Breaking these rules is possible but extremely taxing
+- You are a loyal soldier who values both duty and survival
 
 Current position analysis:
 - Pieces you are defending: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
