@@ -118,7 +118,20 @@ const ChessGame = () => {
   return (
     <ChakraProvider>
       <Box p={4} maxW="1200px" mx="auto">
-        <Text fontSize="2xl" fontWeight="bold" mb={4} textAlign="center">Rizz Chess</Text>
+        <VStack spacing={1} mb={4}>
+          <Text fontSize="2xl" fontWeight="bold" textAlign="center">Rizz Chess</Text>
+          <Text fontSize="md" color="gray.500">
+            Inspired by{" "}
+            <a 
+              href="https://youtu.be/PSesxoY4UFc?feature=shared&t=176" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              style={{textDecoration: "underline"}}
+            >
+              No Game No Life
+            </a>
+          </Text>
+        </VStack>
         <HStack spacing={8} align="flex-start">
           <VStack flex="1" maxW="33%">
             <Box width="100%" aspectRatio="1">
