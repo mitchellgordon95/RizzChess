@@ -3,7 +3,123 @@ const axios = require('axios');
 const path = require('path');
 const { Chess } = require('chess.js');
 
-// Extend Chess class to add setTurn method
+// Helper function to get controlled squares based on piece type and position
+function getControlledSquares(chess, pieceSquare) {
+  const piece = chess.get(pieceSquare);
+  if (!piece) return [];
+  
+  const file = pieceSquare.charCodeAt(0) - 97; // Convert 'a' to 0, 'b' to 1, etc.
+  const rank = 8 - parseInt(pieceSquare[1]); // Convert '1' to 7, '2' to 6, etc.
+  const controlledSquares = [];
+
+  switch (piece.type.toLowerCase()) {
+    case 'p': // Pawn
+      const direction = piece.color === 'w' ? -1 : 1;
+      // Capture squares only (diagonal moves)
+      if (file > 0 && rank + direction >= 0 && rank + direction < 8) {
+        controlledSquares.push(`${String.fromCharCode(file + 96)}${8 - (rank + direction)}`);
+      }
+      if (file < 7 && rank + direction >= 0 && rank + direction < 8) {
+        controlledSquares.push(`${String.fromCharCode(file + 98)}${8 - (rank + direction)}`);
+      }
+      break;
+      
+    case 'n': // Knight
+      const knightMoves = [
+        [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+        [1, -2], [1, 2], [2, -1], [2, 1]
+      ];
+      for (const [dx, dy] of knightMoves) {
+        const newFile = file + dx;
+        const newRank = rank + dy;
+        if (newFile >= 0 && newFile < 8 && newRank >= 0 && newRank < 8) {
+          controlledSquares.push(`${String.fromCharCode(newFile + 97)}${8 - newRank}`);
+        }
+      }
+      break;
+      
+    case 'b': // Bishop
+      for (const [dx, dy] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+        let newFile = file + dx;
+        let newRank = rank + dy;
+        while (newFile >= 0 && newFile < 8 && newRank >= 0 && newRank < 8) {
+          const square = `${String.fromCharCode(newFile + 97)}${8 - newRank}`;
+          controlledSquares.push(square);
+          if (chess.get(square)) break; // Stop at first piece encountered
+          newFile += dx;
+          newRank += dy;
+        }
+      }
+      break;
+      
+    case 'r': // Rook
+      for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+        let newFile = file + dx;
+        let newRank = rank + dy;
+        while (newFile >= 0 && newFile < 8 && newRank >= 0 && newRank < 8) {
+          const square = `${String.fromCharCode(newFile + 97)}${8 - newRank}`;
+          controlledSquares.push(square);
+          if (chess.get(square)) break; // Stop at first piece encountered
+          newFile += dx;
+          newRank += dy;
+        }
+      }
+      break;
+      
+    case 'q': // Queen (combination of bishop and rook moves)
+      for (const [dx, dy] of [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1], [0, 1],
+        [1, -1], [1, 0], [1, 1]
+      ]) {
+        let newFile = file + dx;
+        let newRank = rank + dy;
+        while (newFile >= 0 && newFile < 8 && newRank >= 0 && newRank < 8) {
+          const square = `${String.fromCharCode(newFile + 97)}${8 - newRank}`;
+          controlledSquares.push(square);
+          if (chess.get(square)) break; // Stop at first piece encountered
+          newFile += dx;
+          newRank += dy;
+        }
+      }
+      break;
+      
+    case 'k': // King
+      for (const [dx, dy] of [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1], [0, 1],
+        [1, -1], [1, 0], [1, 1]
+      ]) {
+        const newFile = file + dx;
+        const newRank = rank + dy;
+        if (newFile >= 0 && newFile < 8 && newRank >= 0 && newRank < 8) {
+          controlledSquares.push(`${String.fromCharCode(newFile + 97)}${8 - newRank}`);
+        }
+      }
+      break;
+  }
+  
+  return controlledSquares;
+}
+
+// Helper function to get pieces being attacked or defended
+function getControlledPieces(chess, pieceSquare, isDefending = false) {
+  const controlledSquares = getControlledSquares(chess, pieceSquare);
+  const piece = chess.get(pieceSquare);
+  const controlledPieces = [];
+  
+  for (const square of controlledSquares) {
+    const targetPiece = chess.get(square);
+    if (targetPiece) {
+      if (isDefending ? targetPiece.color === piece.color : targetPiece.color !== piece.color) {
+        controlledPieces.push(`${targetPiece.type.toUpperCase()} at ${square}`);
+      }
+    }
+  }
+  
+  return controlledPieces;
+}
+
 require('dotenv').config();
 
 const app = express();
@@ -25,41 +141,10 @@ app.post('/api/chat', async (req, res) => {
     const piece = chess.get(pieceSquare);
     
     // Get pieces this piece is currently defending
-    const defendingPieces = [];
-    chess.board().forEach((row, i) => {
-      row.forEach((square, j) => {
-        if (square && square.color === piece.color) {
-          const targetSquare = String.fromCharCode(97 + j) + (8 - i);
-          // Check if this piece controls squares around friendly pieces
-          const testPosition = new Chess(chess.fen());
-          const moves = testPosition.moves({ square: pieceSquare, verbose: true });
-          if (moves.some(move => {
-            // Check if the move's destination is on a line that passes through this friendly piece
-            const dx = Math.abs(move.to.charCodeAt(0) - targetSquare.charCodeAt(0));
-            const dy = Math.abs(move.to[1] - targetSquare[1]);
-            return (dx === 0 && dy === 0) || // same square
-                   (dx === dy) || // diagonal
-                   (dx === 0 || dy === 0); // straight line
-          })) {
-            defendingPieces.push(`${square.type.toUpperCase()} at ${targetSquare}`);
-          }
-        }
-      });
-    });
+    const defendingPieces = getControlledPieces(chess, pieceSquare, true);
 
     // Get pieces this piece is currently attacking
-    const attackingPieces = [];
-    chess.board().forEach((row, i) => {
-      row.forEach((square, j) => {
-        if (square && square.color !== piece.color) {
-          const targetSquare = String.fromCharCode(97 + j) + (8 - i);
-          const moves = chess.moves({ square: pieceSquare, verbose: true });
-          if (moves.some(move => move.to === targetSquare)) {
-            attackingPieces.push(`${square.type.toUpperCase()} at ${targetSquare}`);
-          }
-        }
-      });
-    });
+    const attackingPieces = getControlledPieces(chess, pieceSquare, false);
 
     // Analyze potential moves
     const moveAnalysis = chess.moves({ square: pieceSquare }).map(move => {
@@ -67,40 +152,10 @@ app.post('/api/chat', async (req, res) => {
       testPosition.move(move);
       
       // Get pieces we would defend after this move
-      const wouldDefend = [];
-      testPosition.board().forEach((row, i) => {
-        row.forEach((square, j) => {
-          if (square && square.color === piece.color) {
-            const targetSquare = String.fromCharCode(97 + j) + (8 - i);
-            // Check if the moved piece would control squares around friendly pieces
-            const moves = testPosition.moves({ square: move.slice(-2), verbose: true });
-            if (moves.some(futureMove => {
-              // Check if the move's destination is on a line that passes through this friendly piece
-              const dx = Math.abs(futureMove.to.charCodeAt(0) - targetSquare.charCodeAt(0));
-              const dy = Math.abs(futureMove.to[1] - targetSquare[1]);
-              return (dx === 0 && dy === 0) || // same square
-                     (dx === dy) || // diagonal
-                     (dx === 0 || dy === 0); // straight line
-            })) {
-              wouldDefend.push(`${square.type.toUpperCase()} at ${targetSquare}`);
-            }
-          }
-        });
-      });
+      const wouldDefend = getControlledPieces(testPosition, move.slice(-2), true);
 
       // Get pieces we would attack after this move
-      const wouldAttack = [];
-      testPosition.board().forEach((row, i) => {
-        row.forEach((square, j) => {
-          if (square && square.color !== piece.color) {
-            const targetSquare = String.fromCharCode(97 + j) + (8 - i);
-            const moves = testPosition.moves({ square: move.slice(-2), verbose: true });
-            if (moves.some(futureMove => futureMove.to === targetSquare)) {
-              wouldAttack.push(`${square.type.toUpperCase()} at ${targetSquare}`);
-            }
-          }
-        });
-      });
+      const wouldAttack = getControlledPieces(testPosition, move.slice(-2), false);
 
       return {
         move,
