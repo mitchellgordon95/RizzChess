@@ -153,26 +153,6 @@ const ChessGame = () => {
                 customSquareStyles={highlightedSquares}
               />
             </Box>
-            {selectedPieces.map((piece, index) => (
-              <Card width="100%" key={piece.square} mb={2}>
-                <CardBody>
-                  <VStack align="start" spacing={1}>
-                    <Text fontSize="md" fontWeight="bold">
-                      {piece.type.toUpperCase()} at {piece.square}
-                    </Text>
-                    <Text fontSize="sm">
-                      <strong>Personality:</strong> {piece.personality.personality}
-                    </Text>
-                    <Text fontSize="sm">
-                      <strong>Catchphrase:</strong> {piece.personality.catchphrase}
-                    </Text>
-                    <Text fontSize="sm">
-                      <strong>Risk Tolerance:</strong> {piece.personality.riskTolerance}
-                    </Text>
-                  </VStack>
-                </CardBody>
-              </Card>
-            ))}
             <Text fontSize="lg">
               {gameOver ? "Game Over!" : "Chat with the pieces"}
             </Text>
@@ -215,6 +195,28 @@ const ChessGame = () => {
                 </Text>
               )}
             </VStack>
+            <Box mt={4}>
+              {selectedPieces.map((piece, index) => (
+                <Card width="100%" key={piece.square} mb={2}>
+                  <CardBody>
+                    <VStack align="start" spacing={1}>
+                      <Text fontSize="md" fontWeight="bold">
+                        {piece.type.toUpperCase()} at {piece.square}
+                      </Text>
+                      <Text fontSize="sm">
+                        <strong>Personality:</strong> {piece.personality.personality}
+                      </Text>
+                      <Text fontSize="sm">
+                        <strong>Catchphrase:</strong> {piece.personality.catchphrase}
+                      </Text>
+                      <Text fontSize="sm">
+                        <strong>Risk Tolerance:</strong> {piece.personality.riskTolerance}
+                      </Text>
+                    </VStack>
+                  </CardBody>
+                </Card>
+              ))}
+            </Box>
           </VStack>
         </HStack>
       </Box>
