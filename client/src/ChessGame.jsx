@@ -3,6 +3,7 @@ import { Chess } from 'chess.js';
 import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Card, CardBody } from "@chakra-ui/react";
 import { Chessboard } from "react-chessboard";
 import { useChessGame, parsePieceReferences } from './hooks/useChessGame';
+import { PIECE_PERSONALITIES } from './constants/piecePersonalities';
 import './ChessGame.css';
 
 const getPieceSymbol = (piece) => {
