@@ -179,6 +179,19 @@ const ChessGame = () => {
                     setCurrentMessage(e.target.value);
                     updateHighlightedSquares(e.target.value);
                     setErrorMessage(''); // Clear error when input changes
+                    
+                    // Update selected pieces based on current references
+                    const game = new Chess(fen);
+                    const { references } = parsePieceReferences(e.target.value, fen);
+                    const newSelectedPieces = references.map(ref => {
+                      const piece = game.get(ref.square);
+                      return {
+                        ...piece,
+                        square: ref.square,
+                        personality: PIECE_PERSONALITIES[piece.type.toUpperCase()]
+                      };
+                    });
+                    setSelectedPieces(newSelectedPieces);
                   }}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
