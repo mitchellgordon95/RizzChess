@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Chess } from 'chess.js';
-import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Card, CardBody } from "@chakra-ui/react";
+import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
+import PieceDetail from './components/PieceDetail';
 import { Chessboard } from "react-chessboard";
 import { useChessGame, parsePieceReferences } from './hooks/useChessGame';
 import { PIECE_PERSONALITIES } from './constants/piecePersonalities';
@@ -23,6 +24,7 @@ const ChessGame = () => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [highlightedSquares, setHighlightedSquares] = useState({});
   const [selectedPieces, setSelectedPieces] = useState([]);
+  const [expandedPiece, setExpandedPiece] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const chatContainerRef = useRef(null);
 
@@ -156,6 +158,22 @@ const ChessGame = () => {
             <Text fontSize="lg">
               {gameOver ? "Game Over!" : "Chat with the pieces"}
             </Text>
+            {expandedPiece && (
+              <Box mt={4} p={4} bg="gray.50" borderRadius="md" width="100%">
+                <Text fontSize="md" fontWeight="bold">
+                  {expandedPiece.type.toUpperCase()} at {expandedPiece.square}
+                </Text>
+                <Text fontSize="sm" mt={2}>
+                  {expandedPiece.personality.personality}
+                </Text>
+                <Text fontSize="sm" color="gray.600" mt={1}>
+                  "{expandedPiece.personality.catchphrase}"
+                </Text>
+                <Text fontSize="sm" color="gray.500" mt={1}>
+                  Risk Tolerance: {expandedPiece.personality.riskTolerance}
+                </Text>
+              </Box>
+            )}
           </VStack>
           
           <VStack flex="2" bg="gray.100" p={4} borderRadius="md" alignItems="stretch" height="600px">
@@ -209,22 +227,12 @@ const ChessGame = () => {
               )}
             </VStack>
             <Box maxH="200px" overflowY="auto">
-              {selectedPieces.map((piece, index) => (
-                <Card width="100%" key={piece.square} mb={2} size="sm">
-                  <CardBody py={2}>
-                    <VStack align="start" spacing={0}>
-                      <Text fontSize="sm" fontWeight="bold">
-                        {piece.type.toUpperCase()} at {piece.square}
-                      </Text>
-                      <Text fontSize="xs">
-                        {piece.personality.personality}
-                      </Text>
-                      <Text fontSize="xs" color="gray.600">
-                        "{piece.personality.catchphrase}"
-                      </Text>
-                    </VStack>
-                  </CardBody>
-                </Card>
+              {selectedPieces.map((piece) => (
+                <PieceDetail 
+                  key={piece.square} 
+                  piece={piece} 
+                  onClick={() => setExpandedPiece(expandedPiece?.square === piece.square ? null : piece)}
+                />
               ))}
             </Box>
           </VStack>
