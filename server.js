@@ -20,6 +20,74 @@ app.post('/api/chat', async (req, res) => {
     const chess = new Chess(board);
     
     // Construct a prompt for Claude
+    // Analyze current position
+    const currentColor = chess.turn();
+    const piece = chess.get(pieceSquare);
+    
+    // Get pieces this piece is currently defending
+    const defendingPieces = [];
+    chess.board().forEach((row, i) => {
+      row.forEach((square, j) => {
+        if (square && square.color === piece.color) {
+          const targetSquare = String.fromCharCode(97 + j) + (8 - i);
+          if (chess.moves({ square: pieceSquare }).includes(targetSquare)) {
+            defendingPieces.push(`${square.type.toUpperCase()} at ${targetSquare}`);
+          }
+        }
+      });
+    });
+
+    // Get pieces this piece is currently attacking
+    const attackingPieces = [];
+    chess.board().forEach((row, i) => {
+      row.forEach((square, j) => {
+        if (square && square.color !== piece.color) {
+          const targetSquare = String.fromCharCode(97 + j) + (8 - i);
+          if (chess.moves({ square: pieceSquare }).includes(targetSquare)) {
+            attackingPieces.push(`${square.type.toUpperCase()} at ${targetSquare}`);
+          }
+        }
+      });
+    });
+
+    // Analyze potential moves
+    const moveAnalysis = chess.moves({ square: pieceSquare }).map(move => {
+      const testPosition = new Chess(chess.fen());
+      testPosition.move(move);
+      
+      // Get pieces we would defend after this move
+      const wouldDefend = [];
+      testPosition.board().forEach((row, i) => {
+        row.forEach((square, j) => {
+          if (square && square.color === piece.color) {
+            const targetSquare = String.fromCharCode(97 + j) + (8 - i);
+            if (testPosition.moves({ square: move.slice(-2) }).includes(targetSquare)) {
+              wouldDefend.push(`${square.type.toUpperCase()} at ${targetSquare}`);
+            }
+          }
+        });
+      });
+
+      // Get pieces we would attack after this move
+      const wouldAttack = [];
+      testPosition.board().forEach((row, i) => {
+        row.forEach((square, j) => {
+          if (square && square.color !== piece.color) {
+            const targetSquare = String.fromCharCode(97 + j) + (8 - i);
+            if (testPosition.moves({ square: move.slice(-2) }).includes(targetSquare)) {
+              wouldAttack.push(`${square.type.toUpperCase()} at ${targetSquare}`);
+            }
+          }
+        });
+      });
+
+      return {
+        move,
+        wouldDefend,
+        wouldAttack
+      };
+    });
+
     const claudePrompt = `You are an AI assistant helping to play a chess game. 
 
 The player has given this command: "${prompt}"
@@ -27,7 +95,16 @@ The player has given this command: "${prompt}"
 Current turn: ${chess.turn() === 'w' ? 'White' : 'Black'}
 
 You are the ${pieceType} at ${pieceSquare}.
-Your valid moves are: ${chess.moves({ square: pieceSquare }).join(', ')}
+
+Current position analysis:
+- Pieces you are defending: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
+- Pieces you are attacking: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
+
+Your valid moves and their effects:
+${moveAnalysis.map(analysis => `
+Move to ${analysis.move}:
+- Would defend: ${analysis.wouldDefend.length ? analysis.wouldDefend.join(', ') : 'none'}
+- Would attack: ${analysis.wouldAttack.length ? analysis.wouldAttack.join(', ') : 'none'}`).join('\n')}
 
 Note that other pieces might move before or after you in this turn.
 Based on this command and your valid moves, suggest a chess move.
