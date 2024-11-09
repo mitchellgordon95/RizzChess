@@ -128,7 +128,7 @@ const ChessGame = () => {
               rel="noopener noreferrer" 
               style={{textDecoration: "underline"}}
             >
-              No Game No Life
+              NGNL
             </a>
           </Text>
         </VStack>
