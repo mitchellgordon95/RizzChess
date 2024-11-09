@@ -120,6 +120,34 @@ function getControlledPieces(chess, pieceSquare, isDefending = false) {
   return controlledPieces;
 }
 
+// Helper function to get pieces attacking or defending a specific square
+function getPiecesControllingSquare(chess, targetSquare, isDefending = false) {
+  const targetPiece = chess.get(targetSquare);
+  if (!targetPiece) return [];
+  
+  const controllingPieces = [];
+  const board = chess.board();
+  
+  for (let rank = 0; rank < 8; rank++) {
+    for (let file = 0; file < 8; file++) {
+      const piece = board[rank][file];
+      if (piece) {
+        const square = `${String.fromCharCode(97 + file)}${8 - rank}`;
+        if (square !== targetSquare) {
+          const controlledSquares = getControlledSquares(chess, square);
+          if (controlledSquares.includes(targetSquare)) {
+            if (isDefending ? piece.color === targetPiece.color : piece.color !== targetPiece.color) {
+              controllingPieces.push(`${piece.type.toUpperCase()} at ${square}`);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return controllingPieces;
+}
+
 require('dotenv').config();
 
 const app = express();
@@ -146,21 +174,32 @@ app.post('/api/chat', async (req, res) => {
     // Get pieces this piece is currently attacking
     const attackingPieces = getControlledPieces(chess, pieceSquare, false);
 
+    // Get pieces currently defending/attacking this piece
+    const currentlyDefendedBy = getPiecesControllingSquare(chess, pieceSquare, true);
+    const currentlyAttackedBy = getPiecesControllingSquare(chess, pieceSquare, false);
+
     // Analyze potential moves
     const moveAnalysis = chess.moves({ square: pieceSquare }).map(move => {
       const testPosition = new Chess(chess.fen());
       testPosition.move(move);
+      const targetSquare = move.slice(-2);
       
       // Get pieces we would defend after this move
-      const wouldDefend = getControlledPieces(testPosition, move.slice(-2), true);
+      const wouldDefend = getControlledPieces(testPosition, targetSquare, true);
 
       // Get pieces we would attack after this move
-      const wouldAttack = getControlledPieces(testPosition, move.slice(-2), false);
+      const wouldAttack = getControlledPieces(testPosition, targetSquare, false);
+
+      // Get pieces that would defend/attack us in the new position
+      const wouldBeDefendedBy = getPiecesControllingSquare(testPosition, targetSquare, true);
+      const wouldBeAttackedBy = getPiecesControllingSquare(testPosition, targetSquare, false);
 
       return {
         move,
         wouldDefend,
-        wouldAttack
+        wouldAttack,
+        wouldBeDefendedBy,
+        wouldBeAttackedBy
       };
     });
 
@@ -175,12 +214,16 @@ You are the ${pieceType} at ${pieceSquare}.
 Current position analysis:
 - Pieces you are defending: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
 - Pieces you are attacking: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
+- Pieces defending you: ${currentlyDefendedBy.length ? currentlyDefendedBy.join(', ') : 'none'}
+- Pieces attacking you: ${currentlyAttackedBy.length ? currentlyAttackedBy.join(', ') : 'none'}
 
 Your valid moves and their effects:
 ${moveAnalysis.map(analysis => `
 Move to ${analysis.move}:
 - Would defend: ${analysis.wouldDefend.length ? analysis.wouldDefend.join(', ') : 'none'}
-- Would attack: ${analysis.wouldAttack.length ? analysis.wouldAttack.join(', ') : 'none'}`).join('\n')}
+- Would attack: ${analysis.wouldAttack.length ? analysis.wouldAttack.join(', ') : 'none'}
+- Would be defended by: ${analysis.wouldBeDefendedBy.length ? analysis.wouldBeDefendedBy.join(', ') : 'none'}
+- Would be attacked by: ${analysis.wouldBeAttackedBy.length ? analysis.wouldBeAttackedBy.join(', ') : 'none'}`).join('\n')}
 
 Note that other pieces might move before or after you in this turn.
 Based on this command and your valid moves, suggest a chess move.
