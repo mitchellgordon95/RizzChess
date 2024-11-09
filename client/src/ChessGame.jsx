@@ -160,7 +160,7 @@ const ChessGame = () => {
           
           <VStack flex="2" bg="gray.100" p={4} borderRadius="md" alignItems="stretch" height="600px">
             <Text fontSize="xl" fontWeight="bold" mb={4}>Chat</Text>
-            <Box ref={chatContainerRef} height="300px" overflowY="auto" mb={4} bg="white" p={2} borderRadius="md">
+            <Box ref={chatContainerRef} flex="1" overflowY="auto" mb={4} bg="white" p={2} borderRadius="md">
               {chatMessages.map((msg, index) => (
                 <Text 
                   key={index} 
@@ -208,22 +208,19 @@ const ChessGame = () => {
                 </Text>
               )}
             </VStack>
-            <Box mt={4}>
+            <Box maxH="200px" overflowY="auto">
               {selectedPieces.map((piece, index) => (
-                <Card width="100%" key={piece.square} mb={2}>
-                  <CardBody>
-                    <VStack align="start" spacing={1}>
-                      <Text fontSize="md" fontWeight="bold">
+                <Card width="100%" key={piece.square} mb={2} size="sm">
+                  <CardBody py={2}>
+                    <VStack align="start" spacing={0}>
+                      <Text fontSize="sm" fontWeight="bold">
                         {piece.type.toUpperCase()} at {piece.square}
                       </Text>
-                      <Text fontSize="sm">
-                        <strong>Personality:</strong> {piece.personality.personality}
+                      <Text fontSize="xs">
+                        {piece.personality.personality}
                       </Text>
-                      <Text fontSize="sm">
-                        <strong>Catchphrase:</strong> {piece.personality.catchphrase}
-                      </Text>
-                      <Text fontSize="sm">
-                        <strong>Risk Tolerance:</strong> {piece.personality.riskTolerance}
+                      <Text fontSize="xs" color="gray.600">
+                        "{piece.personality.catchphrase}"
                       </Text>
                     </VStack>
                   </CardBody>
