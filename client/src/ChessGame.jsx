@@ -67,6 +67,8 @@ const ChessGame = () => {
     }
     
     setCurrentMessage(''); // Only clear input if there are no invalid references
+    setHighlightedSquares({}); // Clear highlighted squares
+    setSelectedPieces([]); // Clear selected pieces
     const result = await handleSendMessage(messageToSend);
     if (result.gameOver) {
       onOpen();
