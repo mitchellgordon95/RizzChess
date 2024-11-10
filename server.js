@@ -4,6 +4,16 @@ const path = require('path');
 const { Chess } = require('chess.js');
 const { PIECE_PERSONALITIES, GAME_RULES } = require('./client/src/constants/piecePersonalities');
 
+// Extend Chess class to add setTurn method
+Chess.prototype.setTurn = function(turn) {
+  if (turn !== 'w' && turn !== 'b') {
+    throw new Error('Invalid turn. Must be "w" or "b".');
+  }
+  const fenParts = this.fen().split(' ');
+  fenParts[1] = turn;
+  this.load(fenParts.join(' '));
+};
+
 // Helper function to parse piece references from message
 const parsePieceReferences = (message, fen) => {
   const references = [];
