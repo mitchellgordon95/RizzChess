@@ -3,9 +3,38 @@ import { Chess } from 'chess.js';
 import { ChakraProvider, Box, VStack, HStack, Text, Button, Input, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton } from "@chakra-ui/react";
 import PieceDetail from './components/PieceDetail';
 import { Chessboard } from "react-chessboard";
-import { useChessGame, parsePieceReferences } from './hooks/useChessGame';
+import { useChessGame } from './hooks/useChessGame';
 import { PIECE_PERSONALITIES } from './constants/piecePersonalities';
 import './ChessGame.css';
+
+// Local implementation of parsePieceReferences
+const parsePieceReferences = (message, fen) => {
+  const references = [];
+  const invalidReferences = [];
+  const matches = message.match(/@([a-h][1-8][RNBQKP])/g) || [];
+  
+  const game = new Chess(fen);
+  
+  for (const match of matches) {
+    const square = match.slice(1, 3);
+    const expectedType = match[3];
+    const piece = game.get(square);
+    
+    if (piece && piece.type.toUpperCase() === expectedType) {
+      references.push({
+        square,
+        pieceType: piece.type.toUpperCase()
+      });
+    } else {
+      invalidReferences.push({
+        square,
+        expectedType
+      });
+    }
+  }
+  
+  return { references, invalidReferences };
+};
 
 const getPieceSymbol = (piece) => {
   if (!piece) return '';
