@@ -254,7 +254,7 @@ Pieces defending you: ${defendingPieces.length ? defendingPieces.join(', ') : 'n
 The player just said: "${message}"
 
 Respond in character and suggest a chess move. Your response must be in this format:
-MOVE: <uci move notation>
+MOVE: <algebraic move notation like Nf3 or e4>
 MESSAGE: <your in-character response>
 
 Rules:
@@ -285,29 +285,12 @@ Rules:
 
     const content = response.data.content[0].text;
     // Extract move and message using more flexible regex
-    const moveMatch = content.match(/MOVE:\s*([A-Za-z][1-8]?[a-h][1-8][qrbn]?)/i);
+    const moveMatch = content.match(/MOVE:\s*([A-Za-z0-9-]+)/i);
     const messageMatch = content.match(/MESSAGE:\s*(.*?)(?=\n|$)/i);
 
     if (moveMatch && messageMatch) {
-      const move = moveMatch[1];
-      // Convert algebraic notation to UCI if needed
-      let uciMove = move;
-      if (move.match(/^[RNBQK]/)) {
-        // It's algebraic notation, convert to UCI
-        const tempGame = new Chess(fen);
-        try {
-          const result = tempGame.move(move);
-          if (result) {
-            uciMove = result.from + result.to;
-          }
-        } catch (error) {
-          console.error('Error converting move:', error);
-          return null;
-        }
-      }
-      
       return {
-        move: uciMove,
+        move: moveMatch[1],
         message: messageMatch[1].trim()
       };
     } else {
