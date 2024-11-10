@@ -282,8 +282,9 @@ Rules:
     });
 
     const content = response.data.content[0].text;
-    const moveMatch = content.match(/MOVE: ([a-h][1-8][a-h][1-8][qrbn]?)/i);
-    const messageMatch = content.match(/MESSAGE: (.*)/i);
+    // Extract move and message using more flexible regex
+    const moveMatch = content.match(/MOVE:\s*([A-Za-z][1-8]?[a-h][1-8][qrbn]?)/i);
+    const messageMatch = content.match(/MESSAGE:\s*(.*?)(?=\n|$)/i);
 
     if (moveMatch && messageMatch) {
       return {
