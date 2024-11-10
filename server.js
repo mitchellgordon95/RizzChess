@@ -228,6 +228,84 @@ function getPiecesControllingSquare(chess, targetSquare, isDefending = false) {
   return controllingPieces;
 }
 
+async function generatePieceResponse(message, pieceType, square, fen) {
+  const game = new Chess(fen);
+  const piece = game.get(square);
+  if (!piece) return { move: null, message: "Invalid piece" };
+
+  const personality = PIECE_PERSONALITIES[pieceType];
+  const attackedPieces = getControlledPieces(game, square, false);
+  const defendedPieces = getControlledPieces(game, square, true);
+  const attackingPieces = getPiecesControllingSquare(game, square, false);
+  const defendingPieces = getPiecesControllingSquare(game, square, true);
+
+  const claudePrompt = `You are a ${pieceType} chess piece at square ${square}. Your personality: ${personality.personality}
+Your catchphrase is: "${personality.catchphrase}"
+Your risk tolerance is: ${personality.riskTolerance}
+
+Current game state:
+${boardToString(fen)}
+
+You are attacking: ${attackedPieces.length ? attackedPieces.join(', ') : 'no pieces'}
+You are defending: ${defendedPieces.length ? defendedPieces.join(', ') : 'no pieces'}
+Pieces attacking you: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
+Pieces defending you: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
+
+The player just said: "${message}"
+
+Respond in character and suggest a chess move. Your response must be in this format:
+MOVE: <uci move notation>
+MESSAGE: <your in-character response>
+
+Rules:
+1. Your move must be legal according to chess rules
+2. Stay in character based on your personality
+3. Consider your risk tolerance when choosing moves
+4. Reference the current game state in your response
+5. Use your catchphrase occasionally
+6. Keep responses concise (1-2 sentences)`;
+
+  try {
+    const response = await axios.post('https://api.anthropic.com/v1/messages', {
+      model: 'claude-3-opus-20240229',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: claudePrompt
+      }]
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01'
+      }
+    });
+
+    const content = response.data.content[0].text;
+    const moveMatch = content.match(/MOVE: ([a-h][1-8][a-h][1-8][qrbn]?)/i);
+    const messageMatch = content.match(/MESSAGE: (.*)/i);
+
+    if (moveMatch && messageMatch) {
+      return {
+        move: moveMatch[1],
+        message: messageMatch[1].trim()
+      };
+    } else {
+      console.error('Invalid response format from Claude:', content);
+      return {
+        move: null,
+        message: "I'm not sure what move to make."
+      };
+    }
+  } catch (error) {
+    console.error('Error calling Claude API:', error);
+    return {
+      move: null,
+      message: "Sorry, I'm having trouble thinking of a move."
+    };
+  }
+}
+
 require('dotenv').config();
 
 const app = express();
