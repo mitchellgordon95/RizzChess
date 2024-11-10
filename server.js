@@ -287,8 +287,25 @@ Rules:
     const messageMatch = content.match(/MESSAGE:\s*(.*?)(?=\n|$)/i);
 
     if (moveMatch && messageMatch) {
+      const move = moveMatch[1];
+      // Convert algebraic notation to UCI if needed
+      let uciMove = move;
+      if (move.match(/^[RNBQK]/)) {
+        // It's algebraic notation, convert to UCI
+        const tempGame = new Chess(fen);
+        try {
+          const result = tempGame.move(move);
+          if (result) {
+            uciMove = result.from + result.to;
+          }
+        } catch (error) {
+          console.error('Error converting move:', error);
+          return null;
+        }
+      }
+      
       return {
-        move: moveMatch[1],
+        move: uciMove,
         message: messageMatch[1].trim()
       };
     } else {
