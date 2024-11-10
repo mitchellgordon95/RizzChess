@@ -4,6 +4,75 @@ const path = require('path');
 const { Chess } = require('chess.js');
 const { PIECE_PERSONALITIES, GAME_RULES } = require('./client/src/constants/piecePersonalities');
 
+// Helper function to parse piece references from message
+const parsePieceReferences = (message, fen) => {
+  const references = [];
+  const invalidReferences = [];
+  const matches = message.match(/@([a-h][1-8][RNBQKP])/g) || [];
+  
+  const game = new Chess(fen);
+  
+  for (const match of matches) {
+    const square = match.slice(1, 3);
+    const expectedType = match[3];
+    const piece = game.get(square);
+    
+    if (piece && piece.type.toUpperCase() === expectedType) {
+      references.push({
+        square,
+        pieceType: piece.type.toUpperCase()
+      });
+    } else {
+      invalidReferences.push({
+        square,
+        expectedType
+      });
+    }
+  }
+  
+  return { references, invalidReferences };
+};
+
+// Process pieces sequentially and return array of moves
+async function processPieceMoves(message, initialBoard) {
+  const game = new Chess(initialBoard);
+  const { references, invalidReferences } = parsePieceReferences(message, initialBoard);
+  
+  if (invalidReferences.length > 0) {
+    throw new Error(`Invalid piece references: ${invalidReferences.map(ref => 
+      `${ref.expectedType} at ${ref.square}`
+    ).join(', ')}`);
+  }
+
+  const moves = [];
+  let currentFen = initialBoard;
+
+  for (const { pieceType, square } of references) {
+    // Ensure it's white's turn
+    game.load(currentFen);
+    game.setTurn('w');
+    currentFen = game.fen();
+
+    const response = await generatePieceResponse(message, pieceType, square, currentFen);
+    
+    if (response.move) {
+      try {
+        game.move(response.move);
+        moves.push({
+          move: response.move,
+          message: response.message,
+          piece: `${pieceType} at ${square}`
+        });
+        currentFen = game.fen();
+      } catch (error) {
+        console.error('Invalid move:', response.move, error);
+      }
+    }
+  }
+
+  return moves;
+}
+
 // Helper function to get controlled squares based on piece type and position
 function getControlledSquares(chess, pieceSquare) {
   const piece = chess.get(pieceSquare);
@@ -159,161 +228,16 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { prompt, board, pieceType, pieceSquare} = req.body;
-    console.log('Received request:', { prompt, board, pieceType, pieceSquare});
+    const { message, board } = req.body;
+    console.log('Received request:', { message, board });
+
+    const moves = await processPieceMoves(message, board);
     
-    const chess = new Chess(board);
-    
-    // Construct a prompt for Claude
-    // Analyze current position
-    const currentColor = chess.turn();
-    const piece = chess.get(pieceSquare);
-    
-    // Get pieces this piece is currently defending
-    const defendingPieces = getControlledPieces(chess, pieceSquare, true);
-
-    // Get pieces this piece is currently attacking
-    const attackingPieces = getControlledPieces(chess, pieceSquare, false);
-
-    // Get pieces currently defending/attacking this piece
-    const currentlyDefendedBy = getPiecesControllingSquare(chess, pieceSquare, true);
-    const currentlyAttackedBy = getPiecesControllingSquare(chess, pieceSquare, false);
-
-    // Analyze potential moves
-    const moveAnalysis = chess.moves({ square: pieceSquare }).map(move => {
-      const testPosition = new Chess(chess.fen());
-      testPosition.move(move);
-      const targetSquare = move.slice(-2);
-      
-      // Get pieces we would defend after this move
-      const wouldDefend = getControlledPieces(testPosition, targetSquare, true);
-
-      // Get pieces we would attack after this move
-      const wouldAttack = getControlledPieces(testPosition, targetSquare, false);
-
-      // Get pieces that would defend/attack us in the new position
-      const wouldBeDefendedBy = getPiecesControllingSquare(testPosition, targetSquare, true);
-      const wouldBeAttackedBy = getPiecesControllingSquare(testPosition, targetSquare, false);
-
-      return {
-        move,
-        wouldDefend,
-        wouldAttack,
-        wouldBeDefendedBy,
-        wouldBeAttackedBy
-      };
-    });
-
-    // Import personality for this piece type
-    const personality = PIECE_PERSONALITIES[pieceType] || {
-      personality: "Disciplined soldier",
-      catchphrase: "Ready for action!",
-      riskTolerance: "medium"
-    };
-
-    const claudePrompt = `You are a chess piece with a distinct personality helping to play a chess game.
-
-The player has given this command: "${prompt}"
-
-Current turn: ${chess.turn() === 'w' ? 'White' : 'Black'}
-
-Your Identity:
-- You are the ${pieceType} at ${pieceSquare}
-- Personality: ${personality.personality}
-- Catchphrase: ${personality.catchphrase}
-- Risk tolerance: ${personality.riskTolerance}
-
-Game Rules:
-- You can normally only move once per turn
-- You must follow standard chess movement patterns
-- Breaking these rules is possible but extremely taxing
-- You are a loyal soldier who values both duty and survival
-
-Current position analysis:
-- Pieces you are defending: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
-- Pieces you are attacking: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
-- Pieces defending you: ${currentlyDefendedBy.length ? currentlyDefendedBy.join(', ') : 'none'}
-- Pieces attacking you: ${currentlyAttackedBy.length ? currentlyAttackedBy.join(', ') : 'none'}
-
-Your valid moves and their effects:
-${moveAnalysis.map(analysis => `
-Move to ${analysis.move}:
-- Would defend: ${analysis.wouldDefend.length ? analysis.wouldDefend.join(', ') : 'none'}
-- Would attack: ${analysis.wouldAttack.length ? analysis.wouldAttack.join(', ') : 'none'}
-- Would be defended by: ${analysis.wouldBeDefendedBy.length ? analysis.wouldBeDefendedBy.join(', ') : 'none'}
-- Would be attacked by: ${analysis.wouldBeAttackedBy.length ? analysis.wouldBeAttackedBy.join(', ') : 'none'}`).join('\n')}
-
-Note that other pieces might move before or after you in this turn.
-Based on this command and your valid moves, suggest a chess move.
-Respond in this format: "MOVE:[ALGEBRAIC]" (replace [ALGEBRAIC] with the algebraic notation of the move) followed by a very brief explanation (1-2 sentences max).
-If no valid move is possible based on the command, respond with "INVALID" followed by a single sentence explanation.
-
-Remember to roleplay as the ${pieceType}, but keep responses short and direct.`;
-
-    console.log('Sending prompt to Claude:', claudePrompt);
-
-    const response = await axios.post('https://api.anthropic.com/v1/messages', {
-      model: "claude-3-5-sonnet-20240620",
-      max_tokens: 1024,
-      messages: [
-        { role: "user", content: claudePrompt }
-      ]
-    }, {
-      headers: {
-        'x-api-key': process.env.CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      }
-    });
-
-    const aiResponse = response.data.content[0].text;
-    console.log('Received response from Claude:', aiResponse);
-
-    const moveMatch = aiResponse.match(/MOVE:(\S+)/i);
-    
-    let result;
-    if (moveMatch) {
-      const [, move] = moveMatch;
-      const explanation = aiResponse.split('\n').slice(1).join('\n').trim();
-      
-      try {
-        const currentPosition = new Chess(board);
-        const moveResult = currentPosition.move(move);
-        
-        if (moveResult) {
-          result = { 
-            message: explanation, 
-            move: move
-          };
-        } else {
-          throw new Error("Invalid move");
-        }
-      } catch (error) {
-        console.error('Error processing move:', error);
-        result = { 
-          message: `The suggested move ${move} is not valid for the current board state. Let's try a different approach.`, 
-          move: null 
-        };
-      }
-    } else if (aiResponse.includes("INVALID")) {
-      result = { 
-        message: aiResponse.replace("INVALID", "").trim(), 
-        move: null 
-      };
-    } else {
-      result = { 
-        message: "I couldn't generate a valid move based on that command. Let's try something else.", 
-        move: null 
-      };
-    }
-
-    console.log('Processed result:', result);
-
-    console.log('Sending response to client:', result);
-    return res.json(result);
+    console.log('Sending response to client:', moves);
+    return res.json({ moves });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ error: 'An error occurred while processing your request.' });
+    res.status(500).json({ error: error.message });
   }
 });
 
