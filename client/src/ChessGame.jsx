@@ -56,7 +56,7 @@ const ChessGame = () => {
     const messageToSend = currentMessage;
     setErrorMessage(''); // Clear any previous error message
     
-    const { references, invalidReferences } = parsePieceReferences(messageToSend, fen);
+    const { invalidReferences } = parsePieceReferences(messageToSend, fen);
     
     if (invalidReferences.length > 0) {
       const invalidPieces = invalidReferences.map(ref => 

@@ -19,15 +19,6 @@ const isKingCaptured = (fen) => {
   return !whiteKing || !blackKing;
 };
 
-const getRandomAIPiece = (fen) => {
-  const game = new Chess(fen);
-  const pieces = game.board().flat().filter(piece => piece && piece.color === 'b');
-  const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
-  return {
-    type: randomPiece.type.toUpperCase(),
-    square: randomPiece.square
-  };
-};
 
 export const parsePieceReferences = (message, fen) => {
   const references = [];
