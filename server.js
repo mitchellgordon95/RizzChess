@@ -50,6 +50,7 @@ Return empty array if no implicit references found.`;
     });
 
     const content = response.data.content[0].text;
+    console.log('\nImplicit reference response:\n', content, '\n');
     return JSON.parse(content);
   } catch (error) {
     console.error('Error parsing implicit references:', error);
