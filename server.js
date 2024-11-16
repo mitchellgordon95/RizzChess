@@ -286,6 +286,12 @@ async function generatePieceResponse(message, pieceType, square, fen) {
   const piece = game.get(square);
   if (!piece) return { move: null, message: "Invalid piece" };
 
+  // Get all valid moves for this piece
+  const validMoves = game.moves({ 
+    square: square,
+    verbose: true 
+  }).map(move => move.san);
+
   const personality = PIECE_PERSONALITIES[pieceType];
   const attackedPieces = getControlledPieces(game, square, false);
   const defendedPieces = getControlledPieces(game, square, true);
@@ -303,6 +309,8 @@ You are attacking: ${attackedPieces.length ? attackedPieces.join(', ') : 'no pie
 You are defending: ${defendedPieces.length ? defendedPieces.join(', ') : 'no pieces'}
 Pieces attacking you: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
 Pieces defending you: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
+
+Your valid moves are: ${validMoves.join(', ')}
 
 The player just said: "${message}"
 
