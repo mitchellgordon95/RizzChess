@@ -286,11 +286,37 @@ async function generatePieceResponse(message, pieceType, square, fen) {
   const piece = game.get(square);
   if (!piece) return { move: null, message: "Invalid piece" };
 
-  // Get all valid moves for this piece
-  const validMoves = ['None'].concat(game.moves({ 
+  // Get all valid moves for this piece with their consequences
+  const validMovesAnalysis = ['None'];
+  const moves = game.moves({ 
     square: square,
     verbose: true 
-  }).map(move => move.san));
+  });
+
+  // Analyze each possible move
+  for (const move of moves) {
+    const testGame = new Chess(fen);
+    testGame.move(move);
+    
+    // Get the new square after the move
+    const newSquare = move.to;
+    
+    // Analyze the resulting position
+    const attackedAfterMove = getControlledPieces(testGame, newSquare, false);
+    const defendedAfterMove = getControlledPieces(testGame, newSquare, true);
+    const attackingAfterMove = getPiecesControllingSquare(testGame, newSquare, false);
+    const defendingAfterMove = getPiecesControllingSquare(testGame, newSquare, true);
+    
+    validMovesAnalysis.push({
+      move: move.san,
+      consequences: {
+        attacking: attackedAfterMove,
+        defending: defendedAfterMove,
+        attackedBy: attackingAfterMove,
+        defendedBy: defendingAfterMove
+      }
+    });
+  }
 
   const personality = PIECE_PERSONALITIES[pieceType];
   const attackedPieces = getControlledPieces(game, square, false);
@@ -317,7 +343,15 @@ MOVE: <algebraic move notation like Nf3 or e4>
 MESSAGE: <your in-character response>
 
 Rules:
-1. You MUST choose your move from this list of valid moves: ${validMoves.join(', ')}
+1. You MUST choose your move from these options:
+   - 'None' (don't move)
+   ${validMovesAnalysis.slice(1).map(analysis => 
+     `- ${analysis.move}
+       Would attack: ${analysis.consequences.attacking.length ? analysis.consequences.attacking.join(', ') : 'nothing'}
+       Would defend: ${analysis.consequences.defending.length ? analysis.consequences.defending.join(', ') : 'nothing'}
+       Would be attacked by: ${analysis.consequences.attackedBy.length ? analysis.consequences.attackedBy.join(', ') : 'none'}
+       Would be defended by: ${analysis.consequences.defendedBy.length ? analysis.consequences.defendedBy.join(', ') : 'none'}`
+   ).join('\n   ')}
 2. Stay in character based on your personality
 3. Consider your risk tolerance when choosing moves
 4. Reference the current game state in your response
