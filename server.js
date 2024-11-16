@@ -345,10 +345,10 @@ MESSAGE: <your in-character response>
 Rules:
 1. You MUST choose your move from these options:
    - 'None' (don't move)
-     Currently attacking: ${attackedPieces.length ? attackedPieces.join(', ') : 'no pieces'}
-     Currently defending: ${defendedPieces.length ? defendedPieces.join(', ') : 'no pieces'}
-     Currently attacked by: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
-     Currently defended by: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
+     Would attack: ${attackedPieces.length ? attackedPieces.join(', ') : 'nothing'}
+     Would defend: ${defendedPieces.length ? defendedPieces.join(', ') : 'nothing'}
+     Would be attacked by: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
+     Would be defended by: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
    ${validMovesAnalysis.slice(1).map(analysis => 
      `- ${analysis.move}
        Would attack: ${analysis.consequences.attacking.length ? analysis.consequences.attacking.join(', ') : 'nothing'}
