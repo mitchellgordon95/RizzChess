@@ -31,6 +31,8 @@ Return ONLY a JSON array of objects with these properties:
 Example: [{"pieceType":"N","squares":["b1","g1"]}]
 Return empty array if no implicit references found.`;
 
+  console.log('\nImplicit reference prompt:\n', prompt, '\n');
+
   try {
     const response = await axios.post('https://api.anthropic.com/v1/messages', {
       model: 'claude-3-opus-20240229',
