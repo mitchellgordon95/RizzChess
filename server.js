@@ -310,8 +310,6 @@ You are defending: ${defendedPieces.length ? defendedPieces.join(', ') : 'no pie
 Pieces attacking you: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
 Pieces defending you: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
 
-Your valid moves are: ${validMoves.join(', ')}
-
 The player just said: "${message}"
 
 Respond in character and suggest a chess move. Your response must be in this format:
@@ -319,7 +317,7 @@ MOVE: <algebraic move notation like Nf3 or e4>
 MESSAGE: <your in-character response>
 
 Rules:
-1. Your move must be legal according to chess rules
+1. You MUST choose your move from this list of valid moves: ${validMoves.join(', ')}
 2. Stay in character based on your personality
 3. Consider your risk tolerance when choosing moves
 4. Reference the current game state in your response
