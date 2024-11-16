@@ -18,18 +18,20 @@ Chess.prototype.setTurn = function(turn) {
 async function parseImplicitReferences(message, fen) {
   const game = new Chess(fen);
   
-  const prompt = `Given this chess position:
-${boardToString(fen)}
+  const prompt = `${boardToString(fen)}
+"${message}"
 
-And this message: "${message}"
+Return ONLY a JSON array of pieces referenced in the message. Each object needs:
+pieceType: P=pawn, N=knight, B=bishop, R=rook, Q=queen, K=king
+squares: Array of squares that piece occupies
 
-Identify any implicit references to pieces (like "both knights", "all pawns", etc.).
-Return ONLY a JSON array of objects with these properties:
-- pieceType: The type of piece (P,N,B,R,Q,K)
-- squares: Array of squares that piece occupies
-
-Example: [{"pieceType":"N","squares":["b1","g1"]}]
-Return empty array if no implicit references found.`;
+Examples:
+"both knights" -> [{"pieceType":"N","squares":["b1","g1"]}]
+"queen, go take the pawn!" -> [{"pieceType":"Q","squares":["d1"]}]
+"all pawns attack!" -> [{"pieceType":"P","squares":["a2","b2","c2","d2","e2","f2","g2","h2"]}]
+"bishops and rooks" -> [{"pieceType":"B","squares":["c1","f1"]},{"pieceType":"R","squares":["a1","h1"]}]
+"my king is in danger" -> [{"pieceType":"K","squares":["e1"]}]
+"no implicit references" -> []`;
 
   console.log('\nImplicit reference prompt:\n', prompt, '\n');
 
