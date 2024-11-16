@@ -336,11 +336,6 @@ Your risk tolerance is: ${personality.riskTolerance}
 Current game state:
 ${boardToString(fen)}
 
-You are attacking: ${attackedPieces.length ? attackedPieces.join(', ') : 'no pieces'}
-You are defending: ${defendedPieces.length ? defendedPieces.join(', ') : 'no pieces'}
-Pieces attacking you: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
-Pieces defending you: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
-
 The player just said: "${message}"
 
 Respond in character and suggest a chess move. Your response must be in this format:
@@ -350,6 +345,10 @@ MESSAGE: <your in-character response>
 Rules:
 1. You MUST choose your move from these options:
    - 'None' (don't move)
+     Currently attacking: ${attackedPieces.length ? attackedPieces.join(', ') : 'no pieces'}
+     Currently defending: ${defendedPieces.length ? defendedPieces.join(', ') : 'no pieces'}
+     Currently attacked by: ${attackingPieces.length ? attackingPieces.join(', ') : 'none'}
+     Currently defended by: ${defendingPieces.length ? defendingPieces.join(', ') : 'none'}
    ${validMovesAnalysis.slice(1).map(analysis => 
      `- ${analysis.move}
        Would attack: ${analysis.consequences.attacking.length ? analysis.consequences.attacking.join(', ') : 'nothing'}
