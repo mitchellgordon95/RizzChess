@@ -14,12 +14,54 @@ Chess.prototype.setTurn = function(turn) {
   this.load(fenParts.join(' '));
 };
 
+// Helper function to resolve implicit piece references
+async function parseImplicitReferences(message, fen) {
+  const game = new Chess(fen);
+  
+  const prompt = `Given this chess position:
+${boardToString(fen)}
+
+And this message: "${message}"
+
+Identify any implicit references to pieces (like "both knights", "all pawns", etc.).
+Return ONLY a JSON array of objects with these properties:
+- pieceType: The type of piece (P,N,B,R,Q,K)
+- squares: Array of squares that piece occupies
+
+Example: [{"pieceType":"N","squares":["b1","g1"]}]
+Return empty array if no implicit references found.`;
+
+  try {
+    const response = await axios.post('https://api.anthropic.com/v1/messages', {
+      model: 'claude-3-opus-20240229',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: prompt
+      }]
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01'
+      }
+    });
+
+    const content = response.data.content[0].text;
+    return JSON.parse(content);
+  } catch (error) {
+    console.error('Error parsing implicit references:', error);
+    return [];
+  }
+}
+
 // Helper function to parse piece references from message
-const parsePieceReferences = (message, fen) => {
+const parsePieceReferences = async (message, fen) => {
   const references = [];
   const invalidReferences = [];
-  const matches = message.match(/@([a-h][1-8][RNBQKP])/g) || [];
   
+  // Parse explicit @mentions
+  const matches = message.match(/@([a-h][1-8][RNBQKP])/g) || [];
   const game = new Chess(fen);
   
   for (const match of matches) {
@@ -36,6 +78,17 @@ const parsePieceReferences = (message, fen) => {
       invalidReferences.push({
         square,
         expectedType
+      });
+    }
+  }
+
+  // Parse implicit mentions
+  const implicitRefs = await parseImplicitReferences(message, fen);
+  for (const ref of implicitRefs) {
+    for (const square of ref.squares) {
+      references.push({
+        square,
+        pieceType: ref.pieceType
       });
     }
   }
@@ -322,7 +375,38 @@ app.post('/api/chat', async (req, res) => {
     const { message, board } = req.body;
     console.log('Received request:', { message, board });
 
-    const moves = await processPieceMoves(message, board);
+    // Make parsePieceReferences async
+    const { references, invalidReferences } = await parsePieceReferences(message, board);
+    if (invalidReferences.length > 0) {
+      throw new Error(`Invalid piece references: ${invalidReferences.map(ref => 
+        `${ref.expectedType} at ${ref.square}`
+      ).join(', ')}`);
+    }
+
+    const moves = [];
+    let currentFen = board;
+
+    for (const { pieceType, square } of references) {
+      const game = new Chess(currentFen);
+      game.setTurn('w');
+      currentFen = game.fen();
+
+      const response = await generatePieceResponse(message, pieceType, square, currentFen);
+      
+      if (response.move) {
+        try {
+          game.move(response.move);
+          moves.push({
+            move: response.move,
+            message: response.message,
+            piece: `${pieceType} at ${square}`
+          });
+          currentFen = game.fen();
+        } catch (error) {
+          console.error('Invalid move:', response.move, error);
+        }
+      }
+    }
     
     console.log('Sending response to client:', moves);
     return res.json({ moves });
