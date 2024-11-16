@@ -287,10 +287,10 @@ async function generatePieceResponse(message, pieceType, square, fen) {
   if (!piece) return { move: null, message: "Invalid piece" };
 
   // Get all valid moves for this piece
-  const validMoves = game.moves({ 
+  const validMoves = ['None'].concat(game.moves({ 
     square: square,
     verbose: true 
-  }).map(move => move.san);
+  }).map(move => move.san));
 
   const personality = PIECE_PERSONALITIES[pieceType];
   const attackedPieces = getControlledPieces(game, square, false);
@@ -410,19 +410,27 @@ app.post('/api/chat', async (req, res) => {
 
     for (const response of responses) {
       if (response.move) {
-        try {
-          // Reset to current position and try the move
-          game.load(currentFen);
-          game.setTurn('w');
-          game.move(response.move);
-          
-          // If move was legal, add it to results and update position
+        if (response.move === 'None') {
+          // Add the response without making a move
           moves.push({
-            move: response.move,
+            move: null,
             message: response.message,
             piece: `${response.pieceType} at ${response.square}`
           });
-          currentFen = game.fen();
+        } else {
+          try {
+            // Reset to current position and try the move
+            game.load(currentFen);
+            game.setTurn('w');
+            game.move(response.move);
+            
+            // If move was legal, add it to results and update position
+            moves.push({
+              move: response.move,
+              message: response.message,
+              piece: `${response.pieceType} at ${response.square}`
+            });
+            currentFen = game.fen();
         } catch (error) {
           console.error('Invalid move:', response.move, error);
         }
