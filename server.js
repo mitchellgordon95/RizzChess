@@ -383,23 +383,38 @@ app.post('/api/chat', async (req, res) => {
       ).join(', ')}`);
     }
 
+    // Generate all piece responses in parallel
+    const responsePromises = references.map(({ pieceType, square }) => {
+      const game = new Chess(board);
+      game.setTurn('w');
+      return generatePieceResponse(message, pieceType, square, game.fen())
+        .then(response => ({
+          pieceType,
+          square,
+          ...response
+        }));
+    });
+
+    const responses = await Promise.all(responsePromises);
+    
+    // Filter valid moves and apply them sequentially
     const moves = [];
     let currentFen = board;
+    const game = new Chess(currentFen);
 
-    for (const { pieceType, square } of references) {
-      const game = new Chess(currentFen);
-      game.setTurn('w');
-      currentFen = game.fen();
-
-      const response = await generatePieceResponse(message, pieceType, square, currentFen);
-      
+    for (const response of responses) {
       if (response.move) {
         try {
+          // Reset to current position and try the move
+          game.load(currentFen);
+          game.setTurn('w');
           game.move(response.move);
+          
+          // If move was legal, add it to results and update position
           moves.push({
             move: response.move,
             message: response.message,
-            piece: `${pieceType} at ${square}`
+            piece: `${response.pieceType} at ${response.square}`
           });
           currentFen = game.fen();
         } catch (error) {
