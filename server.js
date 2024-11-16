@@ -21,16 +21,17 @@ async function parseImplicitReferences(message, fen) {
   const prompt = `${boardToString(fen)}
 "${message}"
 
-Return ONLY a JSON array of pieces referenced in the message. Each object needs:
+Return ONLY a JSON array of WHITE pieces that are implied to move in the message. Each object needs:
 pieceType: P=pawn, N=knight, B=bishop, R=rook, Q=queen, K=king
 squares: Array of squares that piece occupies
 
 Examples:
-"both knights" -> [{"pieceType":"N","squares":["b1","g1"]}]
+"both knights attack!" -> [{"pieceType":"N","squares":["b1","g1"]}]
 "queen, go take the pawn!" -> [{"pieceType":"Q","squares":["d1"]}]
-"all pawns attack!" -> [{"pieceType":"P","squares":["a2","b2","c2","d2","e2","f2","g2","h2"]}]
-"bishops and rooks" -> [{"pieceType":"B","squares":["c1","f1"]},{"pieceType":"R","squares":["a1","h1"]}]
-"my king is in danger" -> [{"pieceType":"K","squares":["e1"]}]
+"all pawns advance!" -> [{"pieceType":"P","squares":["a2","b2","c2","d2","e2","f2","g2","h2"]}]
+"bishops and rooks, charge!" -> [{"pieceType":"B","squares":["c1","f1"]},{"pieceType":"R","squares":["a1","h1"]}]
+"protect the king" -> []
+"bishop, take the pawn" -> [{"pieceType":"B","squares":["c1"]}]
 "no implicit references" -> []`;
 
   console.log('\nImplicit reference prompt:\n', prompt, '\n');
@@ -53,7 +54,16 @@ Examples:
 
     const content = response.data.content[0].text;
     console.log('\nImplicit reference response:\n', content, '\n');
-    return JSON.parse(content);
+    
+    // Filter to ensure only white pieces are included
+    const references = JSON.parse(content);
+    return references.filter(ref => {
+      // Check each square to verify it contains a white piece
+      return ref.squares.every(square => {
+        const piece = game.get(square);
+        return piece && piece.color === 'w';
+      });
+    });
   } catch (error) {
     console.error('Error parsing implicit references:', error);
     return [];
