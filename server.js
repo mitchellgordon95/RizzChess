@@ -465,8 +465,9 @@ app.post('/api/chat', async (req, res) => {
               piece: `${response.pieceType} at ${response.square}`
             });
             currentFen = game.fen();
-        } catch (error) {
-          console.error('Invalid move:', response.move, error);
+          } catch (error) {
+            console.error('Invalid move:', response.move, error);
+          }
         }
       }
     }
